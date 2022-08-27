@@ -1,0 +1,15 @@
+CFLAGS = -Wall -O3 -fopenmp
+OFFLOAD_FLAG = -fopenmp-targets=nvptx64 --cuda-path=$(CUDA_TOOLKIT_ROOT_DIR) -Xopenmp-target -march=sm_70
+CC=clang
+CXX=clang++
+
+mm: mm.cpp
+	for (( N1=5000; N1<=10000; N1+=1000 )); do \
+  for (( N2=5000; N2<=10000; N2+=1000 )); do \
+	for (( N3=5000; N3<=10000; N3+=1000 )); do \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAG) mm.cpp -DN1=$${N1} -DN2=$${N2} -DN3=$${N3} -o mm_$${N1}_$${N2}_$${N3}_clang_summit.out; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAG) mm.cpp -DMEMCPY -DN1=$${N1} -DN2=$${N2} -DN3=$${N3} -o mm_memcpy_$${N1}_$${N2}_$${N3}_clang_summit.out; \
+	done;done;done
+
+clean:
+	$(RM) *.out
