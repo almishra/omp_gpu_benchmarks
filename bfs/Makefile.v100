@@ -1,0 +1,16 @@
+# C++ compiler
+CXX = clang++
+CFLAGS = -Wall -O3 -fopenmp
+OFFLOAD_FLAGS = -fopenmp-targets=nvptx64 -Xopenmp-target -march=sm_70
+
+bfs: bfs.cpp
+	for (( N=100000; N<=1024000000; N+=100000 )); do \
+	if [ ! -f bfs_$${N}_v100.out ]; then \
+		$(CXX) $(CFLAGS) bfs.cpp -o bfs_$${N}_v100.out -DN=$${N}; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DOMP_OFFLOAD bfs.cpp -o bfs_offload_$${N}_v100.out -DN=$${N}; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DOMP_OFFLOAD -DOMP_OFFLOAD_MEMCPY bfs.cpp -o bfs_offload_memcpy_$${N}_v100.out -DN=$${N}; \
+	fi; \
+	done
+
+clean:
+	rm -f *.out

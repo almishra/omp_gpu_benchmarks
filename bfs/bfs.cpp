@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <string.h>
+#include <string>
 #include <stdlib.h>
 #include <omp.h>
 #include <sys/time.h>
@@ -8,6 +8,8 @@
 #ifndef N                                                                      
 #define N 1000                                                                 
 #endif
+
+static FILE *fp;
 
 int source;
 long totalEdges;
@@ -38,7 +40,26 @@ void BFSGraph(int argc, char** argv);
 ////////////////////////////////////////////////////////////////////////////////
 int main( int argc, char** argv) 
 {
+  // Initiate GPUs and check if it has enough memory
+#ifdef OMP_OFFLOAD
+  long total_size = 3*sizeof(bool)*N + sizeof(Node)*N + 2*sizeof(int)*N;
+  char s[total_size];
+#pragma omp target enter data map(to: s[0:total_size])
+#pragma omp target exit data map(delete: s[0:total_size])
+#endif
   srand(0);
+  std::string ofile;
+  if(argc > 1) {
+    ofile = argv[1];
+  } else {
+    ofile = argv[0];
+    ofile = ofile.substr(ofile.find_last_of("/\\")+1);
+    ofile = ofile.substr(0, ofile.size() - 3);
+    ofile = "output_" + ofile + "csv";
+  }
+
+  printf("%s\n", ofile.c_str());
+  fp = fopen(ofile.c_str(), "w");
   BFSGraph(argc, argv);
 }
 
@@ -130,32 +151,14 @@ void BFSGraph( int argc, char** argv)
 
   // allocate mem for the result 
   int* cost = (int*) malloc( sizeof(int)*N);
-  for(int i=0;i<N;i++)
-    cost[i]=-1;
+  for(int i=0;i<N;i++) cost[i]=-1;
   cost[source]=0;
-
-  // Initiate GPUs and check if it has enough memory
-#ifdef OMP_OFFLOAD
-#pragma omp target enter data map(to: graph_mask[0:N], \
-                                      graph_nodes[0:N], \
-                                      graph_edges[0:totalEdges], \
-                                      graph_visited[0:N], \
-                                      updating_graph_mask[0:N], \
-                                      cost[0:N])
-#pragma omp target exit data map(delete: graph_mask[0:N], \
-                                      graph_nodes[0:N], \
-                                      graph_edges[0:totalEdges], \
-                                      graph_visited[0:N], \
-                                      updating_graph_mask[0:N], \
-                                      cost[0:N])
-#endif
-
 
 #ifdef OMP_OFFLOAD
 #ifndef OMP_OFFLOAD_MEMCPY
-  mem_to += sizeof(bool)*N + sizeof(Node)*N + sizeof(int)*totalEdges +
+  mem_to = sizeof(bool)*N + sizeof(Node)*N + sizeof(int)*totalEdges +
             sizeof(bool)*N + sizeof(bool)*N + sizeof(int)*N;
-  mem_from += sizeof(int)*N;
+  mem_from = sizeof(int)*N;
 #pragma omp target enter data map(to: graph_mask[0:N], \
                                       graph_nodes[0:N], \
                                       graph_edges[0:totalEdges], \
@@ -172,7 +175,7 @@ void BFSGraph( int argc, char** argv)
 #ifdef OMP_OFFLOAD
 #ifdef OMP_OFFLOAD_MEMCPY
       mem_to = sizeof(Node)*N + sizeof(int)*totalEdges + sizeof(bool)*N + 
-                sizeof(int)*N + sizeof(bool)*N + sizeof(bool)*N;
+               sizeof(int)*N + sizeof(bool)*N + sizeof(bool)*N;
 #endif
 #endif
       long start = get_time();
@@ -205,23 +208,26 @@ void BFSGraph( int argc, char** argv)
 #ifdef OMP_OFFLOAD
 #ifdef OMP_OFFLOAD_MEMCPY
 #pragma omp target exit data map(from: graph_nodes[0:N], \
-                                      graph_edges[0:totalEdges], \
-                                      graph_visited[0:N], \
-                                      cost[0:N], \
-                                      updating_graph_mask[0:N], \
-                                      graph_mask[0:N])
+                                       graph_edges[0:totalEdges], \
+                                       graph_visited[0:N], \
+                                       cost[0:N], \
+                                       updating_graph_mask[0:N], \
+                                       graph_mask[0:N])
 #endif
 #endif
       long end = get_time();
 #ifdef OMP_OFFLOAD
 #ifdef OMP_OFFLOAD_MEMCPY
-      mem_from = sizeof(Node)*N + sizeof(int)*totalEdges + sizeof(bool)*N + sizeof(int)*N + sizeof(bool)*N + sizeof(bool)*N;
+      mem_from = sizeof(Node)*N + sizeof(int)*totalEdges + sizeof(bool)*N + 
+                 sizeof(int)*N + sizeof(bool)*N + sizeof(bool)*N;
 #endif
 #endif
 #ifdef OMP_OFFLOAD
-      printf("bfs_kernel_gpu1,%ld,%ld,%ld,%ld,%d,%ld\n", mem_to, mem_alloc, mem_from, mem_del, N, (end - start));
+      fprintf(fp, "bfs_kernel_gpu1,%ld,%ld,%ld,%ld,%d,%ld\n",
+              mem_to, mem_alloc, mem_from, mem_del, N, (end - start));
 #else
-      printf("bfs_kernel_cpu1,%ld,%ld,%ld,%ld,%d,%ld\n", mem_to, mem_alloc, mem_from, mem_del, N, (end - start));
+      fprintf(fp, "bfs_kernel_cpu1,%ld,%ld,%ld,%ld,%d,%ld\n", 
+              mem_to, mem_alloc, mem_from, mem_del, N, (end - start));
 #endif
 
 #ifdef OMP_OFFLOAD
@@ -258,20 +264,27 @@ void BFSGraph( int argc, char** argv)
 #endif
 
 #ifdef OMP_OFFLOAD
-      printf("bfs_kernel_gpu2,%ld,%ld,%ld,%ld,%d,%ld\n", mem_to, mem_alloc, mem_from, mem_del, N, (end - start));
+      fprintf(fp, "bfs_kernel_gpu2,%ld,%ld,%ld,%ld,%d,%ld\n",
+              mem_to, mem_alloc, mem_from, mem_del, N, (end - start));
 #else
-      printf("bfs_kernel_cpu2,%ld,%ld,%ld,%ld,%d,%ld\n", mem_to, mem_alloc, mem_from, mem_del, N, (end - start));
+      fprintf(fp, "bfs_kernel_cpu2,%ld,%ld,%ld,%ld,%d,%ld\n", 
+              mem_to, mem_alloc, mem_from, mem_del, N, (end - start));
 #endif
     }
 #ifdef OMP_OFFLOAD
   }
-#pragma omp target exit data map(delete: graph_mask[0:N], graph_nodes[0:N], graph_edges[0:totalEdges], graph_visited[0:N], updating_graph_mask[0:N]) map(from: cost[0:N])
+#pragma omp target exit data map(delete: graph_mask[0:N], \
+                                         graph_nodes[0:N], \
+                                         graph_edges[0:totalEdges], \
+                                         graph_visited[0:N], \
+                                         updating_graph_mask[0:N]) \
+                             map(from: cost[0:N])
 #endif
 
 #ifdef DEBUG
   //Store the result into a file
   FILE *fpo = fopen("result.txt","w");
-  for(int i=0;i<N;i++) fprintf(fpo,"%d) cost:%d\n",i,cost[i]);
+  for(int i=0; i<N; i++) fprintf(fpo, "%d) cost:%d\n", i, cost[i]);
   fclose(fpo);
   printf("Result stored in result.txt\n");
 #endif
@@ -283,6 +296,4 @@ void BFSGraph( int argc, char** argv)
   free(updating_graph_mask);
   free(graph_visited);
   free(cost);
-
 }
-
