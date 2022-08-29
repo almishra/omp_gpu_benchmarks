@@ -1,0 +1,17 @@
+# C++ compiler
+CXX = clang++
+CFLAGS = -Wall -O3 -fopenmp
+OFFLOAD_FLAGS = -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx906
+
+mm: mm.cpp
+	for (( N1=1000; N1<=10000; N1+=1000 )); do \
+	for (( N2=1000; N2<=10000; N2+=1000 )); do \
+	for (( N3=1000; N3<=10000; N3+=1000 )); do \
+	if [ ! -f mm_$${N1}_$${N2}_$${N3}_amd.out ]; then \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) mm.cpp -DN1=$${N1} -DN2=$${N2} -DN3=$${N3} -o mm_$${N1}_$${N2}_$${N3}_amd.out; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) mm.cpp -DMEMCPY -DN1=$${N1} -DN2=$${N2} -DN3=$${N3} -o mm_memcpy_$${N1}_$${N2}_$${N3}_amd.out; \
+	fi; \
+	done;done;done
+
+clean:
+	$(RM) *.out
