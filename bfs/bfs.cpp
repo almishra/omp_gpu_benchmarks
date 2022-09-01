@@ -1,18 +1,4 @@
-#include <stdio.h>
-#include <string>
-#include <stdlib.h>
-#include <omp.h>
-#include <sys/time.h>
-#include <vector>
-
-#ifndef N                                                                      
-#define N 1000                                                                 
-#endif
-
-static FILE *fp;
-
-int source;
-long totalEdges;
+#include "bfs.h"
 
 long get_time()                                                                 
 {                                                                               
@@ -21,33 +7,25 @@ long get_time()
   return (long)(tv.tv_sec * 1000000 + tv.tv_usec);                              
 } 
 
-long mem_to = 0;
-long mem_from = 0;
-long mem_alloc = 0;
-long mem_del = 0;
-
-//Structure to hold a node information
-struct Node
-{
-  int start;
-  int num_edges;
-};
-
-void BFSGraph(int argc, char** argv);
-
 ////////////////////////////////////////////////////////////////////////////////
 // Main Program
 ////////////////////////////////////////////////////////////////////////////////
 int main( int argc, char** argv) 
 {
   // Initiate GPUs and check if it has enough memory
-#ifdef OMP_OFFLOAD
-  long total_size = 3*sizeof(bool)*N + sizeof(Node)*N + 2*sizeof(int)*N;
+  long total_size = 3*sizeof(bool)*N + sizeof(Node)*N + 6*sizeof(int)*N;
+#ifdef DEBUG
+  printf("Checking for total size %ld\n", total_size);
+#endif
   char s[total_size];
 #pragma omp target enter data map(to: s[0:total_size])
 #pragma omp target exit data map(delete: s[0:total_size])
-#endif
+
+#ifdef DEBUG
   srand(0);
+#else
+  srand(time(NULL));
+#endif
   std::string ofile;
   if(argc > 1) {
     ofile = argv[1];
@@ -59,31 +37,17 @@ int main( int argc, char** argv)
   }
 
   printf("%s\n", ofile.c_str());
-  fp = fopen(ofile.c_str(), "w");
-  BFSGraph(argc, argv);
+  FILE *fp = fopen(ofile.c_str(), "w");
+  BFSGraph(fp);
 }
-
-struct edge;
-typedef std::vector<edge> node;                                                      
-struct edge {                                                                   
-  ulong dest;                                                                   
-  uint weight;                                                                  
-};
-
-#define MIN_NODES 20
-#define MAX_NODES ULONG_MAX
-#define MIN_EDGES 2
-#define MAX_INIT_EDGES 4 // Nodes will have, on average, 2*MAX_INIT_EDGES edges
-#define MIN_WEIGHT 1
-#define MAX_WEIGHT 10
 
 ////////////////////////////////////////////////////////////////////////////////
 // Create Graph Funtion
 // Returns Graph edges
 ////////////////////////////////////////////////////////////////////////////////
-int* CreateGraph(Node* graph_nodes, bool *graph_mask,
-    bool *updating_graph_mask, bool *graph_visited) {
-  int source = 0;
+int* CreateGraph(Node* graph_nodes, bool *graph_mask, bool *updating_graph_mask,
+                 bool *graph_visited, int *cost, Graph *g) {
+  g->source = 0;
 
   node * graph = new node[N];
   uint numEdges;
@@ -107,24 +71,25 @@ int* CreateGraph(Node* graph_nodes, bool *graph_mask,
   }
 
   int start, edgeno;
-  totalEdges = 0;
+  g->totalEdges = 0;
   for (long i = 0; i < N; i++ ) {
     numEdges = graph[i].size();
-    start = totalEdges;
+    start = g->totalEdges;
     edgeno = numEdges;
-    totalEdges += numEdges;
+    g->totalEdges += numEdges;
     graph_nodes[i].start = start;
     graph_nodes[i].num_edges = edgeno;
     graph_mask[i]=false;
     updating_graph_mask[i]=false;
     graph_visited[i]=false;
+    cost[i] = -1;
   }
 
-  source = rand() % numEdges;
-  graph_mask[source] = true;
-  graph_visited[source] = true;
+  g->source = rand() % numEdges;
+  graph_mask[g->source] = true;
+  graph_visited[g->source] = true;
 
-  int* graph_edges = (int*) malloc(sizeof(int) * totalEdges);
+  int* graph_edges = (int*) malloc(sizeof(int) * g->totalEdges);
 
   int k = 0;
   for (long i = 0; i < N; i++ ) {
@@ -139,154 +104,110 @@ int* CreateGraph(Node* graph_nodes, bool *graph_mask,
 ////////////////////////////////////////////////////////////////////////////////
 // Apply BFS on a Graph using OpenMP
 ////////////////////////////////////////////////////////////////////////////////
-void BFSGraph( int argc, char** argv) 
+void BFSGraph(FILE *fp)
 {
   // allocate memory
   Node *graph_nodes = (Node*) malloc(sizeof(Node) * N);
   bool *graph_mask = (bool*) malloc(sizeof(bool) * N);
   bool *updating_graph_mask = (bool*) malloc(sizeof(bool) * N);
   bool *graph_visited = (bool*) malloc(sizeof(bool) * N);
+  int *cost = (int*) malloc( sizeof(int)*N);
+  Graph *g = (Graph*) malloc(sizeof(Graph));
   int  *graph_edges = CreateGraph(graph_nodes, graph_mask, updating_graph_mask, 
-                                  graph_visited);
+                                  graph_visited, cost, g);
 
-  // allocate mem for the result 
-  int* cost = (int*) malloc( sizeof(int)*N);
-  for(int i=0;i<N;i++) cost[i]=-1;
-  cost[source]=0;
+  cost[g->source] = 0;
 
-#ifdef OMP_OFFLOAD
-#ifndef OMP_OFFLOAD_MEMCPY
-  mem_to = sizeof(bool)*N + sizeof(Node)*N + sizeof(int)*totalEdges +
-            sizeof(bool)*N + sizeof(bool)*N + sizeof(int)*N;
-  mem_from = sizeof(int)*N;
+  // Run on CPU 
+  bool stop = true;
+  while(stop) {
+    kernel1_cpu(graph_nodes, graph_mask, updating_graph_mask, graph_visited,
+                graph_edges, cost, g->totalEdges, fp);
+    stop = kernel2_cpu(graph_mask, updating_graph_mask, graph_visited, false,
+                       fp);
+  }
+#ifdef DEBUG
+  {
+    //Store the result into a file
+    std::string res_file = "result_cpu_" + std::to_string(N) + ".log";
+    FILE *fpo = fopen(res_file.c_str(),"w");
+    for(int i=0; i<N; i++) fprintf(fpo, "%d) cost:%d\n", i, cost[i]);
+    fclose(fpo);
+    printf("Result stored in %s\n", res_file.c_str());
+  }
+#endif
+
+  // RESET
+  for (long i = 0; i < N; i++ ) {
+    graph_mask[i] = false;
+    updating_graph_mask[i] = false;
+    graph_visited[i] = false;
+    cost[i] = -1;
+  }
+  graph_mask[g->source] = true;
+  graph_visited[g->source] = true;
+  cost[g->source] = 0;
+
+  // Run on GPU with MEMCPY
+  stop = true;
+  while(stop) {
+    kernel1_gpu_mem(graph_nodes, graph_mask, updating_graph_mask, graph_visited,
+                    graph_edges, cost, g->totalEdges, fp);
+    stop = kernel2_gpu_mem(graph_mask, updating_graph_mask, graph_visited, 
+                           false, fp);
+  }
+#ifdef DEBUG
+  {
+    //Store the result into a file
+    std::string res_file = "result_gpu_mem_" + std::to_string(N) + ".log";
+    FILE *fpo = fopen(res_file.c_str(),"w");
+    for(int i=0; i<N; i++) fprintf(fpo, "%d) cost:%d\n", i, cost[i]);
+    fclose(fpo);
+    printf("Result stored in %s\n", res_file.c_str());
+  }
+#endif
+
+  // RESET
+  for (long i = 0; i < N; i++ ) {
+    graph_mask[i] = false;
+    updating_graph_mask[i] = false;
+    graph_visited[i] = false;
+    cost[i] = -1;
+  }
+  graph_mask[g->source] = true;
+  graph_visited[g->source] = true;
+  cost[g->source] = 0;
+
+  // Run on GPU without MEMCPY
 #pragma omp target enter data map(to: graph_mask[0:N], \
                                       graph_nodes[0:N], \
-                                      graph_edges[0:totalEdges], \
+                                      graph_edges[0:g->totalEdges], \
                                       graph_visited[0:N], \
                                       updating_graph_mask[0:N], \
                                       cost[0:N])
-#endif
-  {
-#endif 
-    bool stop = true;
-    while(stop) {
-      // if no thread changes this value then the loop stops
-      stop = false;
-#ifdef OMP_OFFLOAD
-#ifdef OMP_OFFLOAD_MEMCPY
-      mem_to = sizeof(Node)*N + sizeof(int)*totalEdges + sizeof(bool)*N + 
-               sizeof(int)*N + sizeof(bool)*N + sizeof(bool)*N;
-#endif
-#endif
-      long start = get_time();
-#ifdef OMP_OFFLOAD
-#ifdef OMP_OFFLOAD_MEMCPY
-#pragma omp target enter data map(to: graph_nodes[0:N], \
-                                      graph_edges[0:totalEdges], \
-                                      graph_visited[0:N], \
-                                      cost[0:N], \
-                                      updating_graph_mask[0:N], \
-                                      graph_mask[0:N])
-#endif
-#pragma omp target teams distribute parallel for
-#else
-#pragma omp parallel for 
-#endif
-      for(int tid = 0; tid < N; tid++ ) {
-        if (graph_mask[tid] == true) { 
-          graph_mask[tid]=false;
-          int num = graph_nodes[tid].num_edges + graph_nodes[tid].start;
-          for(int i = graph_nodes[tid].start; i < num; i++) {
-            int id = graph_edges[i];
-            if(!graph_visited[id]) {
-              cost[id]=cost[tid]+1;
-              updating_graph_mask[id]=true;
-            }
-          }
-        }
-      }
-#ifdef OMP_OFFLOAD
-#ifdef OMP_OFFLOAD_MEMCPY
-#pragma omp target exit data map(from: graph_nodes[0:N], \
-                                       graph_edges[0:totalEdges], \
-                                       graph_visited[0:N], \
-                                       cost[0:N], \
-                                       updating_graph_mask[0:N], \
-                                       graph_mask[0:N])
-#endif
-#endif
-      long end = get_time();
-#ifdef OMP_OFFLOAD
-#ifdef OMP_OFFLOAD_MEMCPY
-      mem_from = sizeof(Node)*N + sizeof(int)*totalEdges + sizeof(bool)*N + 
-                 sizeof(int)*N + sizeof(bool)*N + sizeof(bool)*N;
-#endif
-#endif
-#ifdef OMP_OFFLOAD
-      fprintf(fp, "bfs_kernel_gpu1,%ld,%ld,%ld,%ld,%d,%ld\n",
-              mem_to, mem_alloc, mem_from, mem_del, N, (end - start));
-#else
-      fprintf(fp, "bfs_kernel_cpu1,%ld,%ld,%ld,%ld,%d,%ld\n", 
-              mem_to, mem_alloc, mem_from, mem_del, N, (end - start));
-#endif
-
-#ifdef OMP_OFFLOAD
-#ifdef OMP_OFFLOAD_MEMCPY
-      mem_to = sizeof(bool)*N + sizeof(bool)*N + sizeof(bool)*N;
-#endif
-      mem_to += sizeof(int); // Size of stop
-#endif
-      start = get_time();
-#ifdef OMP_OFFLOAD
-#ifdef OMP_OFFLOAD_MEMCPY
-#pragma omp target enter data map(to: updating_graph_mask[0:N], \
-                                      graph_mask[0:N], \
-                                      graph_visited[0:N])
-#endif
-#pragma omp target teams distribute parallel for map(stop)
-#else
-#pragma omp parallel for
-#endif
-      for(int tid = 0; tid < N ; tid++) {
-        if (updating_graph_mask[tid] == true) {
-          graph_mask[tid]=true;
-          graph_visited[tid]=true;
-          stop=true;
-          updating_graph_mask[tid]=false;
-        }
-      }
-      end = get_time();
-#ifdef OMP_OFFLOAD
-#ifdef OMP_OFFLOAD_MEMCPY
-      mem_from = sizeof(bool)*N + sizeof(bool)*N + sizeof(bool)*N;
-#endif
-      mem_from += sizeof(int); // Size of stop
-#endif
-
-#ifdef OMP_OFFLOAD
-      fprintf(fp, "bfs_kernel_gpu2,%ld,%ld,%ld,%ld,%d,%ld\n",
-              mem_to, mem_alloc, mem_from, mem_del, N, (end - start));
-#else
-      fprintf(fp, "bfs_kernel_cpu2,%ld,%ld,%ld,%ld,%d,%ld\n", 
-              mem_to, mem_alloc, mem_from, mem_del, N, (end - start));
-#endif
-    }
-#ifdef OMP_OFFLOAD
+  stop = true;
+  while(stop) {
+    kernel1_gpu(graph_nodes, graph_mask, updating_graph_mask, graph_visited,
+                graph_edges, cost, g->totalEdges, fp);
+    stop = kernel2_gpu(graph_mask, updating_graph_mask, graph_visited, false,
+                       fp);
   }
 #pragma omp target exit data map(delete: graph_mask[0:N], \
                                          graph_nodes[0:N], \
-                                         graph_edges[0:totalEdges], \
+                                         graph_edges[0:g->totalEdges], \
                                          graph_visited[0:N], \
                                          updating_graph_mask[0:N]) \
                              map(from: cost[0:N])
-#endif
 
 #ifdef DEBUG
-  //Store the result into a file
-  FILE *fpo = fopen("result.txt","w");
-  for(int i=0; i<N; i++) fprintf(fpo, "%d) cost:%d\n", i, cost[i]);
-  fclose(fpo);
-  printf("Result stored in result.txt\n");
+  {
+    //Store the result into a file
+    std::string res_file = "result_gpu_" + std::to_string(N) + ".log";
+    FILE *fpo = fopen(res_file.c_str(),"w");
+    for(int i=0; i<N; i++) fprintf(fpo, "%d) cost:%d\n", i, cost[i]);
+    fclose(fpo);
+    printf("Result stored in %s\n", res_file.c_str());
+  }
 #endif
 
   // cleanup memory
