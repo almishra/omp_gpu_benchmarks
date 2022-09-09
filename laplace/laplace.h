@@ -14,7 +14,7 @@
 #define N 100
 #endif
 
-#define MAX_ITER 100
+#define MAX_ITER 20
 #define TOL 0.000001
 
 void initialize(double alpha, double (*A)[N], double (*A1)[N], double (*A2)[N], 
