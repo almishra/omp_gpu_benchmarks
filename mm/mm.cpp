@@ -32,17 +32,21 @@ int main(int argc, char **argv)
 #pragma omp target exit data map(delete: A[0:N1][0:N2], B[0:N2][0:N3], \
                                          C[0:N1][0:N3])
 
-#ifndef MEMCPY
+  // CPU
+  mm_kernel_cpu(A, B, C, fp);
+  mm_kernel_cpu_collapse(A, B, C, fp);
+
+  // GPU MEMCPY
+  mm_kernel_gpu_mem(A, B, C, fp);
+  mm_kernel_gpu_collapse_mem(A, B, C, fp);
+
+  // GPU shared memory
 #pragma omp target enter data map(to: A[0:N1][0:N2], B[0:N2][0:N3]) \
                               map(alloc: C[0:N1][0:N3])
-  multiply_collapse1(A, B, C, fp);
-  multiply_collapse2(A, B, C, fp);
-#endif
-  multiply_gpu_collapse1(A, B, C, fp);
-  multiply_gpu_collapse2(A, B, C, fp);
-#ifndef MEMCPY
+  mm_kernel_gpu(A, B, C, fp);
+  mm_kernel_gpu_collapse(A, B, C, fp);
 #pragma omp target exit data map(delete: A[0:N1][0:N2], B[0:N2][0:N3]) \
     map(from: C[0:N1][0:N3])
-#endif
+
   return 0;
 }

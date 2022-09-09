@@ -21,9 +21,11 @@
 
 long get_time();
 
-void multiply_collapse1(double (*A)[N2], double (*B)[N3], double (*C)[N3], FILE *fp);
-void multiply_collapse2(double (*A)[N2], double (*B)[N3], double (*C)[N3], FILE *fp);
-void multiply_gpu_collapse1(double (*A)[N2], double (*B)[N3], double (*C)[N3], FILE *fp);
-void multiply_gpu_collapse2(double (*A)[N2], double (*B)[N3], double (*C)[N3], FILE *fp);
+void mm_kernel_cpu(double (*A)[N2], double (*B)[N3], double (*C)[N3], FILE *fp);
+void mm_kernel_cpu_collapse(double (*A)[N2], double (*B)[N3], double (*C)[N3], FILE *fp);
+void mm_kernel_gpu(double (*A)[N2], double (*B)[N3], double (*C)[N3], FILE *fp);
+void mm_kernel_gpu_collapse(double (*A)[N2], double (*B)[N3], double (*C)[N3], FILE *fp);
+void mm_kernel_gpu_mem(double (*A)[N2], double (*B)[N3], double (*C)[N3], FILE *fp);
+void mm_kernel_gpu_collapse_mem(double (*A)[N2], double (*B)[N3], double (*C)[N3], FILE *fp);
 
 #endif

@@ -3,27 +3,22 @@ CXX = clang++
 CFLAGS = -Wall -O3 -fopenmp
 OFFLOAD_FLAGS = -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx906
 
-mm: mm.cpp kernel1.cpp kernel2.cpp kernel3.cpp kernel4.cpp
+mm: mm.cpp mm_kernel_cpu_collapse.cpp mm_kernel_cpu.cpp mm_kernel_gpu_collapse.cpp mm_kernel_gpu_collapse_mem.cpp mm_kernel_gpu.cpp mm_kernel_gpu_mem.cpp
 	for (( N1=1000; N1<=10000; N1+=1000 )); do \
 	for (( N2=1000; N2<=10000; N2+=1000 )); do \
 	for (( N3=1000; N3<=10000; N3+=1000 )); do \
 	if [ ! -f mm_$${N1}_$${N2}_$${N3}_amd.out ]; then \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c mm.cpp -DN1=$${N1} -DN2=$${N2} -DN3=$${N3} -o mm_$${N1}_$${N2}_$${N3}_amd.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c kernel1.cpp -DN1=$${N1} -DN2=$${N2} -DN3=$${N3} -o kernel1_$${N1}_$${N2}_$${N3}_amd.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c kernel2.cpp -DN1=$${N1} -DN2=$${N2} -DN3=$${N3} -o kernel2_$${N1}_$${N2}_$${N3}_amd.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c kernel3.cpp -DN1=$${N1} -DN2=$${N2} -DN3=$${N3} -o kernel3_$${N1}_$${N2}_$${N3}_amd.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c kernel4.cpp -DN1=$${N1} -DN2=$${N2} -DN3=$${N3} -o kernel4_$${N1}_$${N2}_$${N3}_amd.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) kernel1_$${N1}_$${N2}_$${N3}_amd.o kernel2_$${N1}_$${N2}_$${N3}_amd.o kernel3_$${N1}_$${N2}_$${N3}_amd.o kernel4_$${N1}_$${N2}_$${N3}_amd.o mm_$${N1}_$${N2}_$${N3}_amd.o -o mm_$${N1}_$${N2}_$${N3}_amd.out; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DMEMCPY -c mm.cpp -DN1=$${N1} -DN2=$${N2} -DN3=$${N3} -o mm_mem_$${N1}_$${N2}_$${N3}_amd.o; \
-		$(RM) mm_$${N1}_$${N2}_$${N3}_amd.o kernel*_$${N1}_$${N2}_$${N3}_amd.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DMEMCPY -c kernel1.cpp -DN1=$${N1} -DN2=$${N2} -DN3=$${N3} -o kernel1_mem_$${N1}_$${N2}_$${N3}_amd.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DMEMCPY -c kernel2.cpp -DN1=$${N1} -DN2=$${N2} -DN3=$${N3} -o kernel2_mem_$${N1}_$${N2}_$${N3}_amd.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DMEMCPY -c kernel3.cpp -DN1=$${N1} -DN2=$${N2} -DN3=$${N3} -o kernel3_mem_$${N1}_$${N2}_$${N3}_amd.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DMEMCPY -c kernel4.cpp -DN1=$${N1} -DN2=$${N2} -DN3=$${N3} -o kernel4_mem_$${N1}_$${N2}_$${N3}_amd.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) kernel1_mem_$${N1}_$${N2}_$${N3}_amd.o kernel2_mem_$${N1}_$${N2}_$${N3}_amd.o kernel3_mem_$${N1}_$${N2}_$${N3}_amd.o kernel4_mem_$${N1}_$${N2}_$${N3}_amd.o mm_mem_$${N1}_$${N2}_$${N3}_amd.o -o mm_mem_$${N1}_$${N2}_$${N3}_amd.out; \
-		$(RM) mm_mem_$${N1}_$${N2}_$${N3}_amd.o kernel*_mem_$${N1}_$${N2}_$${N3}_amd.o; \
+  	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN1=$${N1} -DN2=$${N2} -DN3=$${N3} -c mm.cpp -o mm_$${N1}_$${N2}_$${N3}_amd.o; \
+	  $(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN1=$${N1} -DN2=$${N2} -DN3=$${N3} -c mm_kernel_cpu.cpp -o mm_kernel_cpu_$${N1}_$${N2}_$${N3}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN1=$${N1} -DN2=$${N2} -DN3=$${N3} -c mm_kernel_cpu_collapse.cpp -o mm_kernel_cpu_collapse_$${N1}_$${N2}_$${N3}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN1=$${N1} -DN2=$${N2} -DN3=$${N3} -c mm_kernel_gpu.cpp -o mm_kernel_gpu_$${N1}_$${N2}_$${N3}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN1=$${N1} -DN2=$${N2} -DN3=$${N3} -c mm_kernel_gpu_collapse.cpp -o mm_kernel_gpu_collapse_$${N1}_$${N2}_$${N3}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN1=$${N1} -DN2=$${N2} -DN3=$${N3} -c mm_kernel_gpu_mem.cpp -o mm_kernel_gpu_mem_$${N1}_$${N2}_$${N3}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN1=$${N1} -DN2=$${N2} -DN3=$${N3} -c mm_kernel_gpu_collapse_mem.cpp -o mm_kernel_gpu_collapse_mem_$${N1}_$${N2}_$${N3}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN1=$${N1} -DN2=$${N2} -DN3=$${N3} mm_kernel_cpu_$${N1}_$${N2}_$${N3}_amd.o mm_kernel_cpu_collapse_$${N1}_$${N2}_$${N3}_amd.o mm_kernel_gpu_$${N1}_$${N2}_$${N3}_amd.o mm_kernel_gpu_collapse_$${N1}_$${N2}_$${N3}_amd.o mm_kernel_gpu_mem_$${N1}_$${N2}_$${N3}_amd.o mm_kernel_gpu_collapse_mem_$${N1}_$${N2}_$${N3}_amd.o mm_$${N1}_$${N2}_$${N3}_amd.o -o mm_$${N1}_$${N2}_$${N3}_amd.out; \
+		$(RM) mm_kernel_cpu_$${N1}_$${N2}_$${N3}_amd.o mm_kernel_cpu_collapse_$${N1}_$${N2}_$${N3}_amd.o mm_kernel_gpu_$${N1}_$${N2}_$${N3}_amd.o mm_kernel_gpu_collapse_$${N1}_$${N2}_$${N3}_amd.o mm_kernel_gpu_mem_$${N1}_$${N2}_$${N3}_amd.o mm_kernel_gpu_collapse_mem_$${N1}_$${N2}_$${N3}_amd.o mm_$${N1}_$${N2}_$${N3}_amd.o; \
 	fi; \
 	done;done;done
 
 clean:
-	$(RM) *.out
+	$(RM) *_amd.o *_amd.out
