@@ -3,17 +3,17 @@ CXX = clang++
 CFLAGS = -Wall -O3 -fopenmp
 OFFLOAD_FLAGS = -fopenmp-targets=nvptx64 -Xopenmp-target -march=sm_70
 
-nn: nn.cpp kernel_cpu.cpp kernel_gpu.cpp kernel_gpu_mem.cpp
-	for (( N=10000; N<=50000000; N+=10000 )); do \
-	if [ ! -f nn_$${N}_v100.out ]; then \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c nn.cpp -DREC_WINDOW=$${N} -o nn_$${N}_v100.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c kernel_cpu.cpp -DREC_WINDOW=$${N} -o kernel_cpu_$${N}_v100.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c kernel_gpu.cpp -DREC_WINDOW=$${N} -o kernel_gpu_$${N}_v100.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c kernel_gpu_mem.cpp -DREC_WINDOW=$${N} -o kernel_gpu_mem_$${N}_v100.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -lm kernel_cpu_$${N}_v100.o kernel_gpu_$${N}_v100.o kernel_gpu_mem_$${N}_v100.o nn_$${N}_v100.o -o nn_$${N}_v100.out; \
-		$(RM) kernel_cpu_$${N}_v100.o kernel_gpu_$${N}_v100.o kernel_gpu_mem_$${N}_v100.o nn_$${N}_v100.o; \
+nn: nn.cpp nn_kernel_cpu.cpp nn_kernel_gpu.cpp nn_kernel_gpu_mem.cpp
+	for (( N1=10000; N1<=50000000; N1+=10000 )); do \
+	if [ ! -f nn_$${N1}_v100.out ]; then \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c nn.cpp -DREC_WINDOW=$${N1} -o nn_$${N1}_v100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c nn_kernel_cpu.cpp -DREC_WINDOW=$${N1} -o nn_kernel_cpu_$${N1}_v100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c nn_kernel_gpu.cpp -DREC_WINDOW=$${N1} -o nn_kernel_gpu_$${N1}_v100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c nn_kernel_gpu_mem.cpp -DREC_WINDOW=$${N1} -o nn_kernel_gpu_mem_$${N1}_v100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -lm nn_kernel_cpu_$${N1}_v100.o nn_kernel_gpu_$${N1}_v100.o nn_kernel_gpu_mem_$${N1}_v100.o nn_$${N1}_v100.o -o nn_$${N1}_v100.out; \
+		$(RM) nn_kernel_cpu_$${N1}_v100.o nn_kernel_gpu_$${N1}_v100.o nn_kernel_gpu_mem_$${N1}_v100.o nn_$${N1}_v100.o; \
 	fi; \
 	done
 
 clean:
-	$(RM) *.out *.o
+	$(RM) *_v100.out *_v100.o

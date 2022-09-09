@@ -9,10 +9,10 @@ all:
 
 test: nn.cpp
 	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c nn.cpp -o nn_test.o
-	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c kernel_cpu.cpp -o kernel_cpu_test.o
-	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c kernel_gpu.cpp -o kernel_gpu_test.o
-	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c kernel_gpu_mem.cpp -o kernel_gpu_mem_test.o
-	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -lm kernel_cpu_test.o kernel_gpu_test.o kernel_gpu_mem_test.o nn_test.o -o nn_test.out
+	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c nn_kernel_cpu.cpp -o nn_kernel_cpu_test.o
+	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c nn_kernel_gpu.cpp -o nn_kernel_gpu_test.o
+	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c nn_kernel_gpu_mem.cpp -o nn_kernel_gpu_mem_test.o
+	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -lm nn_kernel_cpu_test.o nn_kernel_gpu_test.o nn_kernel_gpu_mem_test.o nn_test.o -o nn_test.out
 	$(RM) *_test.o
 
 clean:

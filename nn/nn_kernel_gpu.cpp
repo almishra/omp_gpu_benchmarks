@@ -9,5 +9,5 @@ void kernel_nn_gpu(float *z, float *lat, float *lon, FILE *fp) {
   }
   long end = get_time();
 
-  fprintf(fp, "kernel_nn_gpu,0,0,0,0,%d,%ld\n", REC_WINDOW, end - start);
+  fprintf(fp, "nn_kernel_gpu,%ld,1,1,0,0,0,0,1,%d\n", (end - start), REC_WINDOW);
 }

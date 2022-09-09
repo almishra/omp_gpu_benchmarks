@@ -17,6 +17,6 @@ void kernel_nn_gpu_mem(float *z, float *lat, float *lon, FILE *fp) {
   }
   long end = get_time();
 
-  fprintf(fp, "kernel_nn_gpu_mem,%ld,%ld,%ld,%ld,%d,%ld\n", mem_to, mem_alloc,
-          mem_from, mem_del, REC_WINDOW, end - start);
+  fprintf(fp, "nn_kernel_gpu_mem,%ld,1,1,%ld,%ld,%ld,%ld,1,%d\n", 
+          (end - start), mem_to, mem_alloc, mem_from, mem_del, REC_WINDOW);
 }
