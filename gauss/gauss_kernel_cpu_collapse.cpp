@@ -16,7 +16,7 @@ int kernel_cpu_collapse(double (*mat)[N], FILE *fp) {
   }
   long end = get_time();
 
-  fprintf(fp, "gauss_kernel_cpu_collapse,0,0,0,0,%d,%ld\n", N, (end - start));
+  fprintf(fp, "gauss_kernel_cpu_collapse,%ld,0,2,0,0,0,0,1,%d\n", (end - start), N);
 
   return diff;
 }

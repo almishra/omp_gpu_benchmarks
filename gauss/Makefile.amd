@@ -3,21 +3,21 @@ CXX = clang++
 CFLAGS = -Wall -O3 -fopenmp
 OFFLOAD_FLAGS = -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx906
 
-all: gauss.cpp kernel_cpu_collapse.cpp kernel_cpu.cpp kernel_gpu_collapse.cpp kernel_gpu_collapse_mem.cpp kernel_gpu.cpp kernel_gpu_mem.cpp
+all: gauss.cpp gauss_kernel_cpu_collapse.cpp gauss_kernel_cpu.cpp gauss_kernel_gpu_collapse.cpp gauss_kernel_gpu_collapse_mem.cpp gauss_kernel_gpu.cpp gauss_kernel_gpu_mem.cpp
 	for (( N=32; N<9500; N+=32 )); do \
 	if [ ! -f gauss_$${N}_amd.out ]; then \
 		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c gauss.cpp -o gauss_$${N}_amd.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c kernel_cpu.cpp -o kernel_cpu_$${N}_amd.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c kernel_cpu_collapse.cpp -o kernel_cpu_collapse_$${N}_amd.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c kernel_gpu.cpp -o kernel_gpu_$${N}_amd.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c kernel_gpu_collapse.cpp -o kernel_gpu_collapse_$${N}_amd.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c kernel_gpu_mem.cpp -o kernel_gpu_mem_$${N}_amd.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c kernel_gpu_collapse_mem.cpp -o kernel_gpu_collapse_mem_$${N}_amd.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) kernel_cpu_$${N}_amd.o kernel_cpu_collapse_$${N}_amd.o kernel_gpu_$${N}_amd.o kernel_gpu_collapse_$${N}_amd.o kernel_gpu_mem_$${N}_amd.o kernel_gpu_collapse_mem_$${N}_amd.o gauss_$${N}_amd.o -o gauss_$${N}_amd.out; \
-		$(RM) kernel_cpu_$${N}_amd.o kernel_cpu_collapse_$${N}_amd.o kernel_gpu_$${N}_amd.o kernel_gpu_collapse_$${N}_amd.o kernel_gpu_mem_$${N}_amd.o kernel_gpu_collapse_mem_$${N}_amd.o gauss_$${N}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c gauss_kernel_cpu.cpp -o gauss_kernel_cpu_$${N}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c gauss_kernel_cpu_collapse.cpp -o gauss_kernel_cpu_collapse_$${N}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c gauss_kernel_gpu.cpp -o gauss_kernel_gpu_$${N}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c gauss_kernel_gpu_collapse.cpp -o gauss_kernel_gpu_collapse_$${N}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c gauss_kernel_gpu_mem.cpp -o gauss_kernel_gpu_mem_$${N}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c gauss_kernel_gpu_collapse_mem.cpp -o gauss_kernel_gpu_collapse_mem_$${N}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} gauss_kernel_cpu_$${N}_amd.o gauss_kernel_cpu_collapse_$${N}_amd.o gauss_kernel_gpu_$${N}_amd.o gauss_kernel_gpu_collapse_$${N}_amd.o gauss_kernel_gpu_mem_$${N}_amd.o gauss_kernel_gpu_collapse_mem_$${N}_amd.o gauss_$${N}_amd.o -o gauss_$${N}_amd.out; \
+		$(RM) gauss_kernel_cpu_$${N}_amd.o gauss_kernel_cpu_collapse_$${N}_amd.o gauss_kernel_gpu_$${N}_amd.o gauss_kernel_gpu_collapse_$${N}_amd.o gauss_kernel_gpu_mem_$${N}_amd.o gauss_kernel_gpu_collapse_mem_$${N}_amd.o gauss_$${N}_amd.o; \
 	fi; \
 	done
 
 clean:
-	$(RM) gs_offload_noreuse gs_offload gs_offload_noreuse6 gs_offload6 gs_offload_noreuse7 gs_offload7
+	$(RM) *_amd.o *_amd.out
 

@@ -22,7 +22,8 @@ int kernel_gpu(double (*mat)[N], FILE *fp) {
   }
   long end = get_time();
 
-  fprintf(fp, "gauss_kernel_gpu,%ld,0,%ld,0,%d,%ld\n", sizeof(int), sizeof(int), N, (end - start));
+  fprintf(fp, "gauss_kernel_gpu,%ld,1,1,%lu,0,%lu,0,1,%d\n", 
+          (end - start), sizeof(int), sizeof(int), N);
 
   return diff;
 }

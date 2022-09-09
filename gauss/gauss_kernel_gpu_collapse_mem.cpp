@@ -1,13 +1,13 @@
 #include "gauss.h"
 
-int kernel_gpu_mem(double (*mat)[N], FILE *fp) {
+int kernel_gpu_collapse_mem(double (*mat)[N], FILE *fp) {
   int diff = 0;
-  long mem_to = sizeof(double)*N*N;
-  long mem_from = sizeof(double)*N*N;
+  long mem_to = sizeof(double)*N*N + sizeof(int);
+  long mem_from = sizeof(double)*N*N + sizeof(int);
   long mem_alloc = 0;
-  long mem_delete = 0;
+  long mem_delete = sizeof(double)*N*N;
   long start = get_time();
-#pragma omp target teams distribute parallel for reduction(+:diff) \
+#pragma omp target teams distribute parallel for collapse(2) reduction(+:diff) \
                    map(mat[0:N][0:N])
   for (int i = 1; i < N-1; i++) {
     for (int j = 1; j < N-1; j++) {
@@ -28,7 +28,8 @@ int kernel_gpu_mem(double (*mat)[N], FILE *fp) {
   long end = get_time();
 #pragma omp target exit data map(delete: mat[0:N][0:N])
 
-  fprintf(fp, "kernel_gpu_mem,%ld,%ld,%ld,%ld,%d,%ld\n", mem_to, mem_alloc, mem_from, mem_delete, N, (end - start));
+  fprintf(fp, "gauss_kernel_gpu_collapse_mem,%ld,1,2,%ld,%ld,%ld,%ld,1,%d\n", 
+          (end - start), mem_to, mem_alloc, mem_from, mem_delete, N);
 
   return diff;
 }

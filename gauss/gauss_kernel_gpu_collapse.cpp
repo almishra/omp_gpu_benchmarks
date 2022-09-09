@@ -23,7 +23,8 @@ int kernel_gpu_collapse(double (*mat)[N], FILE *fp) {
   }
   long end = get_time();
 
-  fprintf(fp, "gauss_kernel_gpu_collapse,%ld,0,%ld,0,%d,%ld\n", sizeof(int), sizeof(int), N, (end - start));
+  fprintf(fp, "gauss_kernel_gpu_collapse,%ld,1,2,%lu,0,%lu,0,1,%d\n",
+          (end - start), sizeof(int), sizeof(int), N);
 
   return diff;
 }

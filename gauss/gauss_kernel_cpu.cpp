@@ -16,7 +16,7 @@ int kernel_cpu(double (*mat)[N], FILE *fp) {
   }
   long end = get_time();
 
-  fprintf(fp, "gauss_kernel_cpu,0,0,0,0,%d,%ld\n", N, (end - start));
+  fprintf(fp, "gauss_kernel_cpu,%ld,0,1,0,0,0,0,1,%d\n", (end - start), N);
 
   return diff;
 }
