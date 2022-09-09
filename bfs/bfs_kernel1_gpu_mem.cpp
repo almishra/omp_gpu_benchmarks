@@ -36,6 +36,6 @@ void kernel1_gpu_mem(Node* graph_nodes, bool *graph_mask,
   }
   long end = get_time();
 
-  fprintf(fp, "bfs_kernel1_gpu_mem,%ld,%ld,%ld,%ld,%d,%ld\n",
-          mem_to, mem_alloc, mem_from, mem_del, N, (end - start));
+  fprintf(fp, "bfs_kernel1_gpu_mem,%ld,1,1,%ld,%ld,%ld,%ld,1,%d\n", (end - start), 
+          mem_to, mem_alloc, mem_from, mem_del, N);
 }

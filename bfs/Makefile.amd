@@ -3,18 +3,18 @@ CXX = clang++
 CFLAGS = -Wall -O3 -fopenmp
 OFFLOAD_FLAGS = -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx906
 
-bfs: bfs.cpp kernel1_cpu.cpp kernel1_gpu.cpp kernel1_gpu_mem.cpp kernel2_cpu.cpp kernel2_gpu.cpp kernel2_gpu_mem.cpp
+bfs: bfs.cpp bfs_kernel1_cpu.cpp bfs_kernel1_gpu.cpp bfs_kernel1_gpu_mem.cpp bfs_kernel2_cpu.cpp bfs_kernel2_gpu.cpp bfs_kernel2_gpu_mem.cpp
 	for (( N=100000; N<=102400000; N+=10000 )); do \
 	if [ ! -f bfs_$${N}_amd.out ]; then \
 		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c bfs.cpp -o bfs_$${N}_amd.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c kernel1_cpu.cpp -o kernel1_cpu_$${N}_amd.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c kernel2_cpu.cpp -o kernel2_cpu_$${N}_amd.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c kernel1_gpu.cpp -o kernel1_gpu_$${N}_amd.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c kernel2_gpu.cpp -o kernel2_gpu_$${N}_amd.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c kernel1_gpu_mem.cpp -o kernel1_gpu_mem_$${N}_amd.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c kernel2_gpu_mem.cpp -o kernel2_gpu_mem_$${N}_amd.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} kernel1_cpu_$${N}_amd.o kernel2_cpu_$${N}_amd.o kernel1_gpu_$${N}_amd.o kernel2_gpu_$${N}_amd.o kernel1_gpu_mem_$${N}_amd.o kernel2_gpu_mem_$${N}_amd.o bfs_$${N}_amd.o -o bfs_$${N}_amd.out; \
-		$(RM) kernel1_cpu_$${N}_amd.o kernel2_cpu_$${N}_amd.o kernel1_gpu_$${N}_amd.o kernel2_gpu_$${N}_amd.o kernel1_gpu_mem_$${N}_amd.o kernel2_gpu_mem_$${N}_amd.o bfs_$${N}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c bfs_kernel1_cpu.cpp -o bfs_kernel1_cpu_$${N}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c bfs_kernel2_cpu.cpp -o bfs_kernel2_cpu_$${N}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c bfs_kernel1_gpu.cpp -o bfs_kernel1_gpu_$${N}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c bfs_kernel2_gpu.cpp -o bfs_kernel2_gpu_$${N}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c bfs_kernel1_gpu_mem.cpp -o bfs_kernel1_gpu_mem_$${N}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c bfs_kernel2_gpu_mem.cpp -o bfs_kernel2_gpu_mem_$${N}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} bfs_kernel1_cpu_$${N}_amd.o bfs_kernel2_cpu_$${N}_amd.o bfs_kernel1_gpu_$${N}_amd.o bfs_kernel2_gpu_$${N}_amd.o bfs_kernel1_gpu_mem_$${N}_amd.o bfs_kernel2_gpu_mem_$${N}_amd.o bfs_$${N}_amd.o -o bfs_$${N}_amd.out; \
+		$(RM) bfs_kernel1_cpu_$${N}_amd.o bfs_kernel2_cpu_$${N}_amd.o bfs_kernel1_gpu_$${N}_amd.o bfs_kernel2_gpu_$${N}_amd.o bfs_kernel1_gpu_mem_$${N}_amd.o bfs_kernel2_gpu_mem_$${N}_amd.o bfs_$${N}_amd.o; \
 	fi; \
 	done
 

@@ -17,7 +17,7 @@ bool kernel2_gpu(bool *graph_mask, bool *updating_graph_mask,
     }
   }
   long end = get_time();
-  fprintf(fp, "bfs_kernel2_gpu,0,0,0,0,%d,%ld\n", N, (end - start));
+  fprintf(fp, "bfs_kernel2_gpu,%ld,1,1,0,0,0,0,1,%d\n", (end - start), N);
 
   return stop;
 }

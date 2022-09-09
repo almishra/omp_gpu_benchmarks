@@ -23,5 +23,5 @@ void kernel1_cpu(Node* graph_nodes, bool *graph_mask, bool *updating_graph_mask,
     }
   }
   long end = get_time();
-  fprintf(fp, "bfs_kernel1_cpu,0,0,0,0,%d,%ld\n", N, (end - start));
+  fprintf(fp, "bfs_kernel1_cpu,%ld,0,1,0,0,0,0,1,%d\n", (end - start), N);
 }
