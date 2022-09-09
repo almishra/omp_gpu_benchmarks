@@ -1,0 +1,19 @@
+# C++ compiler
+CXX = clang++
+CFLAGS = -Wall -O3 -fopenmp
+OFFLOAD_FLAGS = -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx906
+
+nn: nn.cpp kernel_cpu.cpp kernel_gpu.cpp kernel_gpu_mem.cpp
+	for (( N=10000; N<=50000000; N+=10000 )); do \
+	if [ ! -f nn_$${N}_amd.out ]; then \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c nn.cpp -DREC_WINDOW=$${N} -o nn_$${N}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c kernel_cpu.cpp -DREC_WINDOW=$${N} -o kernel_cpu_$${N}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c kernel_gpu.cpp -DREC_WINDOW=$${N} -o kernel_gpu_$${N}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c kernel_gpu_mem.cpp -DREC_WINDOW=$${N} -o kernel_gpu_mem_$${N}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -lm kernel_cpu_$${N}_amd.o kernel_gpu_$${N}_amd.o kernel_gpu_mem_$${N}_amd.o nn_$${N}_amd.o -o nn_$${N}_amd.out; \
+		$(RM) kernel_cpu_$${N}_amd.o kernel_gpu_$${N}_amd.o kernel_gpu_mem_$${N}_amd.o nn_$${N}_amd.o; \
+	fi; \
+	done
+
+clean:
+	$(RM) *.out *.o
