@@ -3,25 +3,25 @@ CXX = clang++
 CFLAGS = -Wall -O3 -fopenmp
 OFFLOAD_FLAGS = -fopenmp-targets=nvptx64 -Xopenmp-target -march=sm_70
 
-all: laplace.cpp kernel1_cpu_collapse.cpp kernel1_gpu_collapse.cpp kernel1_gpu.cpp kernel2_cpu_collapse.cpp kernel2_gpu_collapse.cpp kernel2_gpu.cpp kernel1_cpu.cpp kernel1_gpu_collapse_mem.cpp kernel1_gpu_mem.cpp kernel2_cpu.cpp kernel2_gpu_collapse_mem.cpp kernel2_gpu_mem.cpp
-	for (( M=64; M<8500; M+=256 )); do \
-	for (( N=64; N<8500; N+=256 )); do \
-	if [ ! -f laplace_$${M}_$${N}_v100.out ]; then \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${M} -DN=$${N} -c laplace.cpp -o laplace_$${M}_$${N}_v100.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${M} -DN=$${N} -c kernel1_cpu.cpp -o kernel1_cpu_$${M}_$${N}_v100.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${M} -DN=$${N} -c kernel1_cpu_collapse.cpp -o kernel1_cpu_collapse_$${M}_$${N}_v100.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${M} -DN=$${N} -c kernel2_cpu.cpp -o kernel2_cpu_$${M}_$${N}_v100.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${M} -DN=$${N} -c kernel2_cpu_collapse.cpp -o kernel2_cpu_collapse_$${M}_$${N}_v100.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${M} -DN=$${N} -c kernel1_gpu_mem.cpp -o kernel1_gpu_mem_$${M}_$${N}_v100.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${M} -DN=$${N} -c kernel1_gpu_collapse_mem.cpp -o kernel1_gpu_collapse_mem_$${M}_$${N}_v100.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${M} -DN=$${N} -c kernel2_gpu_mem.cpp -o kernel2_gpu_mem_$${M}_$${N}_v100.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${M} -DN=$${N} -c kernel2_gpu_collapse_mem.cpp -o kernel2_gpu_collapse_mem_$${M}_$${N}_v100.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${M} -DN=$${N} -c kernel1_gpu.cpp -o kernel1_gpu_$${M}_$${N}_v100.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${M} -DN=$${N} -c kernel1_gpu_collapse.cpp -o kernel1_gpu_collapse_$${M}_$${N}_v100.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${M} -DN=$${N} -c kernel2_gpu.cpp -o kernel2_gpu_$${M}_$${N}_v100.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${M} -DN=$${N} -c kernel2_gpu_collapse.cpp -o kernel2_gpu_collapse_$${M}_$${N}_v100.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${M} -DN=$${N} kernel1_cpu_$${M}_$${N}_v100.o kernel1_cpu_collapse_$${M}_$${N}_v100.o kernel2_cpu_$${M}_$${N}_v100.o kernel2_cpu_collapse_$${M}_$${N}_v100.o kernel1_gpu_mem_$${M}_$${N}_v100.o kernel1_gpu_collapse_mem_$${M}_$${N}_v100.o kernel2_gpu_mem_$${M}_$${N}_v100.o kernel2_gpu_collapse_mem_$${M}_$${N}_v100.o kernel1_gpu_$${M}_$${N}_v100.o kernel1_gpu_collapse_$${M}_$${N}_v100.o kernel2_gpu_$${M}_$${N}_v100.o kernel2_gpu_collapse_$${M}_$${N}_v100.o laplace_$${M}_$${N}_v100.o -o laplace_$${M}_$${N}_v100.out; \
-		$(RM) kernel1_cpu_$${M}_$${N}_v100.o kernel1_cpu_collapse_$${M}_$${N}_v100.o kernel2_cpu_$${M}_$${N}_v100.o kernel2_cpu_collapse_$${M}_$${N}_v100.o kernel1_gpu_mem_$${M}_$${N}_v100.o kernel1_gpu_collapse_mem_$${M}_$${N}_v100.o kernel2_gpu_mem_$${M}_$${N}_v100.o kernel2_gpu_collapse_mem_$${M}_$${N}_v100.o kernel1_gpu_$${M}_$${N}_v100.o kernel1_gpu_collapse_$${M}_$${N}_v100.o kernel2_gpu_$${M}_$${N}_v100.o kernel2_gpu_collapse_$${M}_$${N}_v100.o laplace_$${M}_$${N}_v100.o;
+all: laplace.cpp laplace_kernel1_cpu_collapse.cpp laplace_kernel1_gpu_collapse.cpp laplace_kernel1_gpu.cpp laplace_kernel2_cpu_collapse.cpp laplace_kernel2_gpu_collapse.cpp laplace_kernel2_gpu.cpp laplace_kernel1_cpu.cpp laplace_kernel1_gpu_collapse_mem.cpp laplace_kernel1_gpu_mem.cpp laplace_kernel2_cpu.cpp laplace_kernel2_gpu_collapse_mem.cpp laplace_kernel2_gpu_mem.cpp
+	for (( N1=64; N1<8500; N1+=256 )); do \
+	for (( N2=64; N2<8500; N2+=256 )); do \
+	if [ ! -f laplace_$${N1}_$${N2}_v100.out ]; then \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${N1} -DN=$${N2} -c laplace.cpp -o laplace_$${N1}_$${N2}_v100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${N1} -DN=$${N2} -c laplace_kernel1_cpu.cpp -o laplace_kernel1_cpu_$${N1}_$${N2}_v100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${N1} -DN=$${N2} -c laplace_kernel1_cpu_collapse.cpp -o laplace_kernel1_cpu_collapse_$${N1}_$${N2}_v100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${N1} -DN=$${N2} -c laplace_kernel2_cpu.cpp -o laplace_kernel2_cpu_$${N1}_$${N2}_v100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${N1} -DN=$${N2} -c laplace_kernel2_cpu_collapse.cpp -o laplace_kernel2_cpu_collapse_$${N1}_$${N2}_v100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${N1} -DN=$${N2} -c laplace_kernel1_gpu_mem.cpp -o laplace_kernel1_gpu_mem_$${N1}_$${N2}_v100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${N1} -DN=$${N2} -c laplace_kernel1_gpu_collapse_mem.cpp -o laplace_kernel1_gpu_collapse_mem_$${N1}_$${N2}_v100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${N1} -DN=$${N2} -c laplace_kernel2_gpu_mem.cpp -o laplace_kernel2_gpu_mem_$${N1}_$${N2}_v100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${N1} -DN=$${N2} -c laplace_kernel2_gpu_collapse_mem.cpp -o laplace_kernel2_gpu_collapse_mem_$${N1}_$${N2}_v100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${N1} -DN=$${N2} -c laplace_kernel1_gpu.cpp -o laplace_kernel1_gpu_$${N1}_$${N2}_v100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${N1} -DN=$${N2} -c laplace_kernel1_gpu_collapse.cpp -o laplace_kernel1_gpu_collapse_$${N1}_$${N2}_v100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${N1} -DN=$${N2} -c laplace_kernel2_gpu.cpp -o laplace_kernel2_gpu_$${N1}_$${N2}_v100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${N1} -DN=$${N2} -c laplace_kernel2_gpu_collapse.cpp -o laplace_kernel2_gpu_collapse_$${N1}_$${N2}_v100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${N1} -DN=$${N2} laplace_kernel1_cpu_$${N1}_$${N2}_v100.o laplace_kernel1_cpu_collapse_$${N1}_$${N2}_v100.o laplace_kernel2_cpu_$${N1}_$${N2}_v100.o laplace_kernel2_cpu_collapse_$${N1}_$${N2}_v100.o laplace_kernel1_gpu_mem_$${N1}_$${N2}_v100.o laplace_kernel1_gpu_collapse_mem_$${N1}_$${N2}_v100.o laplace_kernel2_gpu_mem_$${N1}_$${N2}_v100.o laplace_kernel2_gpu_collapse_mem_$${N1}_$${N2}_v100.o laplace_kernel1_gpu_$${N1}_$${N2}_v100.o laplace_kernel1_gpu_collapse_$${N1}_$${N2}_v100.o laplace_kernel2_gpu_$${N1}_$${N2}_v100.o laplace_kernel2_gpu_collapse_$${N1}_$${N2}_v100.o laplace_$${N1}_$${N2}_v100.o -o laplace_$${N1}_$${N2}_v100.out; \
+		$(RM) laplace_kernel1_cpu_$${N1}_$${N2}_v100.o laplace_kernel1_cpu_collapse_$${N1}_$${N2}_v100.o laplace_kernel2_cpu_$${N1}_$${N2}_v100.o laplace_kernel2_cpu_collapse_$${N1}_$${N2}_v100.o laplace_kernel1_gpu_mem_$${N1}_$${N2}_v100.o laplace_kernel1_gpu_collapse_mem_$${N1}_$${N2}_v100.o laplace_kernel2_gpu_mem_$${N1}_$${N2}_v100.o laplace_kernel2_gpu_collapse_mem_$${N1}_$${N2}_v100.o laplace_kernel1_gpu_$${N1}_$${N2}_v100.o laplace_kernel1_gpu_collapse_$${N1}_$${N2}_v100.o laplace_kernel2_gpu_$${N1}_$${N2}_v100.o laplace_kernel2_gpu_collapse_$${N1}_$${N2}_v100.o laplace_$${N1}_$${N2}_v100.o;
 	fi; \
 	done; done
 

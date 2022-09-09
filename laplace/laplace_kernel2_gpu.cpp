@@ -10,5 +10,6 @@ void kernel2_gpu(double (*A)[N], double (*Anew)[N], FILE *fp) {
   }
   long end = get_time();
 
-  fprintf(fp, "laplace_kernel2_gpu,0,0,0,0,%d,%d,%ld\n", M, N, (end - start));
+  fprintf(fp, "laplace_kernel2_gpu,%ld,1,1,0,0,0,0,2,%d,%d\n", 
+          (end - start), M, N);
 }

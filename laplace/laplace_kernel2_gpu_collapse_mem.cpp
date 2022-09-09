@@ -15,6 +15,6 @@ void kernel2_gpu_collapse_mem(double (*A)[N], double (*Anew)[N], FILE *fp) {
   }
   long end = get_time();
 
-  fprintf(fp, "laplace_kernel2_gpu_collapse_mem,%ld,%ld,%ld,%ld,%d,%d,%ld\n",
-          mem_to, mem_alloc, mem_from, mem_delete, M, N, (end - start));
+  fprintf(fp, "laplace_kernel2_gpu_collapse_mem,%ld,1,2,%ld,%ld,%ld,%ld,2,%d,%d\n", 
+          (end - start), mem_to, mem_alloc, mem_from, mem_delete, M, N);
 }

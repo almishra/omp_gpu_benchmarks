@@ -17,6 +17,7 @@ double kernel1_gpu_collapse(double (*A)[N], double (*Anew)[N], double err, FILE 
   }
   long end = get_time();
 
-  fprintf(fp, "laplace_kernel1_gpu_collapse,0,0,0,0,%d,%d,%ld\n", M, N, (end - start));
+  fprintf(fp, "laplace_kernel1_gpu_collapse,%ld,1,2,0,0,0,0,2,%d,%d\n", 
+          (end - start), M, N);
   return err;
 }

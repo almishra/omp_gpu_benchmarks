@@ -1,0 +1,30 @@
+# C++ compiler
+CXX = clang++
+CFLAGS = -Wall -O3 -fopenmp
+OFFLOAD_FLAGS = -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx906
+
+all: laplace.cpp laplace_kernel1_cpu_collapse.cpp laplace_kernel1_gpu_collapse.cpp laplace_kernel1_gpu.cpp laplace_kernel2_cpu_collapse.cpp laplace_kernel2_gpu_collapse.cpp laplace_kernel2_gpu.cpp laplace_kernel1_cpu.cpp laplace_kernel1_gpu_collapse_mem.cpp laplace_kernel1_gpu_mem.cpp laplace_kernel2_cpu.cpp laplace_kernel2_gpu_collapse_mem.cpp laplace_kernel2_gpu_mem.cpp
+	for (( N1=64; N1<8500; N1+=256 )); do \
+	for (( N2=64; N2<8500; N2+=256 )); do \
+	if [ ! -f laplace_$${N1}_$${N2}_amd.out ]; then \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${N1} -DN=$${N2} -c laplace.cpp -o laplace_$${N1}_$${N2}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${N1} -DN=$${N2} -c laplace_kernel1_cpu.cpp -o laplace_kernel1_cpu_$${N1}_$${N2}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${N1} -DN=$${N2} -c laplace_kernel1_cpu_collapse.cpp -o laplace_kernel1_cpu_collapse_$${N1}_$${N2}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${N1} -DN=$${N2} -c laplace_kernel2_cpu.cpp -o laplace_kernel2_cpu_$${N1}_$${N2}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${N1} -DN=$${N2} -c laplace_kernel2_cpu_collapse.cpp -o laplace_kernel2_cpu_collapse_$${N1}_$${N2}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${N1} -DN=$${N2} -c laplace_kernel1_gpu_mem.cpp -o laplace_kernel1_gpu_mem_$${N1}_$${N2}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${N1} -DN=$${N2} -c laplace_kernel1_gpu_collapse_mem.cpp -o laplace_kernel1_gpu_collapse_mem_$${N1}_$${N2}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${N1} -DN=$${N2} -c laplace_kernel2_gpu_mem.cpp -o laplace_kernel2_gpu_mem_$${N1}_$${N2}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${N1} -DN=$${N2} -c laplace_kernel2_gpu_collapse_mem.cpp -o laplace_kernel2_gpu_collapse_mem_$${N1}_$${N2}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${N1} -DN=$${N2} -c laplace_kernel1_gpu.cpp -o laplace_kernel1_gpu_$${N1}_$${N2}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${N1} -DN=$${N2} -c laplace_kernel1_gpu_collapse.cpp -o laplace_kernel1_gpu_collapse_$${N1}_$${N2}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${N1} -DN=$${N2} -c laplace_kernel2_gpu.cpp -o laplace_kernel2_gpu_$${N1}_$${N2}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${N1} -DN=$${N2} -c laplace_kernel2_gpu_collapse.cpp -o laplace_kernel2_gpu_collapse_$${N1}_$${N2}_amd.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DM=$${N1} -DN=$${N2} laplace_kernel1_cpu_$${N1}_$${N2}_amd.o laplace_kernel1_cpu_collapse_$${N1}_$${N2}_amd.o laplace_kernel2_cpu_$${N1}_$${N2}_amd.o laplace_kernel2_cpu_collapse_$${N1}_$${N2}_amd.o laplace_kernel1_gpu_mem_$${N1}_$${N2}_amd.o laplace_kernel1_gpu_collapse_mem_$${N1}_$${N2}_amd.o laplace_kernel2_gpu_mem_$${N1}_$${N2}_amd.o laplace_kernel2_gpu_collapse_mem_$${N1}_$${N2}_amd.o laplace_kernel1_gpu_$${N1}_$${N2}_amd.o laplace_kernel1_gpu_collapse_$${N1}_$${N2}_amd.o laplace_kernel2_gpu_$${N1}_$${N2}_amd.o laplace_kernel2_gpu_collapse_$${N1}_$${N2}_amd.o laplace_$${N1}_$${N2}_amd.o -o laplace_$${N1}_$${N2}_amd.out; \
+		$(RM) laplace_kernel1_cpu_$${N1}_$${N2}_amd.o laplace_kernel1_cpu_collapse_$${N1}_$${N2}_amd.o laplace_kernel2_cpu_$${N1}_$${N2}_amd.o laplace_kernel2_cpu_collapse_$${N1}_$${N2}_amd.o laplace_kernel1_gpu_mem_$${N1}_$${N2}_amd.o laplace_kernel1_gpu_collapse_mem_$${N1}_$${N2}_amd.o laplace_kernel2_gpu_mem_$${N1}_$${N2}_amd.o laplace_kernel2_gpu_collapse_mem_$${N1}_$${N2}_amd.o laplace_kernel1_gpu_$${N1}_$${N2}_amd.o laplace_kernel1_gpu_collapse_$${N1}_$${N2}_amd.o laplace_kernel2_gpu_$${N1}_$${N2}_amd.o laplace_kernel2_gpu_collapse_$${N1}_$${N2}_amd.o laplace_$${N1}_$${N2}_amd.o;
+	fi; \
+	done; done
+
+clean:
+	$(RM) *.o *.out;
+

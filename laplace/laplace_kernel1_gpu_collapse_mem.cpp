@@ -1,12 +1,12 @@
 #include "laplace.h"
 
-double kernel1_gpu_mem(double (*A)[N], double (*Anew)[N], double err, FILE *fp) {
+double kernel1_gpu_collapse_mem(double (*A)[N], double (*Anew)[N], double err, FILE *fp) {
   long mem_to = sizeof(double)*M*N;
   long mem_from = sizeof(double)*M*N;
   long mem_alloc = sizeof(double)*M*N;
   long mem_delete = 0;
   long start = get_time();
-#pragma omp target teams distribute parallel for reduction(max: err) \
+#pragma omp target teams distribute parallel for collapse(2) reduction(max: err) \
                    map(alloc: Anew[0:M][0:N]) map(to: A[0:M][0:N]) map(err)
   for(int i = 1; i < M-1; i++) {
     for(int j = 1; j < N-1; j++) {
@@ -22,7 +22,7 @@ double kernel1_gpu_mem(double (*A)[N], double (*Anew)[N], double err, FILE *fp) 
   }
   long end = get_time();
 
-  fprintf(fp, "laplace_kernel1_gpu_mem,%ld,%ld,%ld,%ld,%d,%d,%ld\n",
-          mem_to, mem_alloc, mem_from, mem_delete, M, N, (end - start));
+  fprintf(fp, "laplace_kernel1_gpu_collapse_mem,%ld,1,2,%ld,%ld,%ld,%ld,2,%d,%d\n", 
+          (end - start), mem_to, mem_alloc, mem_from, mem_delete, M, N);
   return err;
 }
