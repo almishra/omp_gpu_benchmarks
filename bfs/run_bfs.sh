@@ -3,6 +3,8 @@ for i in `ls bfs_*.out`
 do
   filename=$(basename -- "$i")
   filename="${filename%.*}"
-  ./$i;
-  cat output_${filename}.csv >> dataset_bfs.csv
+  if [ ! -f output_${filename}.csv ]; then
+    ./$i;
+    cat output_${filename}.csv >> dataset_bfs.csv
+  fi
 done

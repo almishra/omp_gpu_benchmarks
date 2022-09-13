@@ -3,6 +3,8 @@ for i in `ls gauss_*.out`
 do
   filename=$(basename -- "$i")
   filename="${filename%.*}"
-  ./$i;
-  cat output_${filename}.csv >> dataset_gauss.csv
+  if [ ! -f output_${filename}.csv ]; then
+    ./$i;
+    cat output_${filename}.csv >> dataset_gauss.csv
+  fi
 done

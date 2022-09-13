@@ -3,6 +3,8 @@ for i in `ls laplace_*.out`
 do
   filename=$(basename -- "$i")
   filename="${filename%.*}"
-  ./$i;
-  cat output_${filename}.csv >> dataset_laplace.csv
+  if [ ! -f output_${filename}.csv ]; then
+    ./$i;
+    cat output_${filename}.csv >> dataset_laplace.csv
+  fi
 done

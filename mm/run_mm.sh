@@ -3,6 +3,8 @@ for i in `ls mm_*.out`
 do
   filename=$(basename -- "$i")
   filename="${filename%.*}"
-  ./$i;
-  cat output_${filename}.csv >> dataset_mm.csv
+  if [ ! -f output_${filename}.csv ]; then
+    ./$i;
+    cat output_${filename}.csv >> dataset_mm.csv
+  fi
 done

@@ -3,6 +3,8 @@ for i in `ls nn_*.out`
 do
   filename=$(basename -- "$i")
   filename="${filename%.*}"
-  ./$i;
-  cat output_${filename}.csv >> dataset_nn.csv
+  if [ ! -f output_${filename}.csv ]; then
+    ./$i;
+    cat output_${filename}.csv >> dataset_nn.csv
+  fi
 done
