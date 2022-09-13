@@ -1,5 +1,6 @@
 *.out
 *.o
 output*.csv
+*.core
 core.*
 run_*.o*
