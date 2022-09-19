@@ -24,10 +24,10 @@ int get_max_rows(const int num_threads, const int n);
 
 long get_time();
 
-int kernel_cpu(double (*mat)[N], FILE *fp);
-int kernel_cpu_collapse(double (*mat)[N], FILE *fp);
-int kernel_gpu(double (*mat)[N], FILE *fp);
-int kernel_gpu_collapse(double (*mat)[N], FILE *fp);
-int kernel_gpu_mem(double (*mat)[N], FILE *fp);
-int kernel_gpu_collapse_mem(double (*mat)[N], FILE *fp);
+float kernel_cpu(double (*mat)[N], FILE *fp);
+float kernel_cpu_collapse(double (*mat)[N], FILE *fp);
+float kernel_gpu(double (*mat)[N], FILE *fp);
+float kernel_gpu_collapse(double (*mat)[N], FILE *fp);
+float kernel_gpu_mem(double (*mat)[N], FILE *fp);
+float kernel_gpu_collapse_mem(double (*mat)[N], FILE *fp);
 #endif

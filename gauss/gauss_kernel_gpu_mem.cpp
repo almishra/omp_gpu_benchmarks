@@ -1,7 +1,19 @@
 #include "gauss.h"
 
-int kernel_gpu_mem(double (*mat)[N], FILE *fp) {
-  int diff = 0;
+float kernel_gpu_mem(double (*mat)[N], FILE *fp)
+{
+  int num_threads = 0;
+  int num_teams = 1;
+#pragma omp target teams distribute parallel for map(num_teams, num_threads)
+  for (int i = 1; i < N-1; i++) {
+    for (int j = 1; j < N-1; j++) {
+      if(i == 1 && j == 1) {
+        num_threads = omp_get_num_threads();
+        num_teams = omp_get_num_teams();
+      }
+    }
+  }
+  float diff = 0;
   long mem_to = sizeof(double)*N*N + sizeof(int);
   long mem_from = sizeof(double)*N*N + sizeof(int);
   long mem_alloc = 0;
@@ -28,8 +40,9 @@ int kernel_gpu_mem(double (*mat)[N], FILE *fp) {
   long end = get_time();
 #pragma omp target exit data map(delete: mat[0:N][0:N])
 
-  fprintf(fp, "gauss_kernel_gpu_mem,%ld,1,1,%ld,%ld,%ld,%ld,1,%d\n", 
-          (end - start), mem_to, mem_alloc, mem_from, mem_delete, N);
+  fprintf(fp, "gauss_kernel_gpu_mem,%ld,1,1,%d,%d,%ld,%ld,%ld,%ld,1,%d\n", 
+          (end - start), num_teams, num_threads, mem_to, mem_alloc, mem_from,
+          mem_delete, N);
 
   return diff;
 }
