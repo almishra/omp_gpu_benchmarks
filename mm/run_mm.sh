@@ -1,10 +1,11 @@
-echo "kernel,runtime,gpu,collapse,mem_to,mem_alloc,mem_from,mem_delete,num_var,N1,N2,N3" >> dataset_mm.csv
+DATASET=dataset_mm_v100_`date +'%m%d%y_%H%M%S%3N'`.csv
+echo "kernel,runtime,gpu,collapse,num_teams,num_threads,mem_to,mem_alloc,mem_from,mem_delete,num_var,N1,N2,N3" > ${DATASET}
 for i in `ls mm_*.out`
 do
   filename=$(basename -- "$i")
   filename="${filename%.*}"
   if [ ! -f output_${filename}.csv ]; then
     ./$i;
-    cat output_${filename}.csv >> dataset_mm.csv
+    cat output_${filename}.csv >> ${DATASET}
   fi
 done
