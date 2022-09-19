@@ -1,6 +1,18 @@
 #include "laplace.h"
 
-double kernel1_cpu(double (*A)[N], double (*Anew)[N], double err, FILE *fp) {
+double kernel1_cpu(double (*A)[N], double (*Anew)[N], double err, FILE *fp)
+{
+  int num_threads = 0;
+  int num_teams = 1;
+#pragma omp parallel for
+  for (int i = 1; i < M-1; i++) {
+    for (int j = 1; j < N-1; j++) {
+      if(i == 1 && j == 1) {
+        num_threads = omp_get_num_threads();
+        num_teams = omp_get_num_teams();
+      }
+    }
+  }
   long start = get_time();
 #pragma omp parallel for reduction(max: err)
   for(int i = 1; i < M-1; i++) {
@@ -17,7 +29,7 @@ double kernel1_cpu(double (*A)[N], double (*Anew)[N], double err, FILE *fp) {
   }
   long end = get_time();
 
-  fprintf(fp, "laplace_kernel1_cpu,%ld,0,1,0,0,0,0,2,%d,%d\n", 
-          (end - start), M, N);
+  fprintf(fp, "laplace_kernel1_cpu,%ld,0,1,%d,%d,0,0,0,0,2,%d,%d\n",
+          (end - start), num_teams, num_threads, M, N);
   return err;
 }

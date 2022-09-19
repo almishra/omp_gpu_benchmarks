@@ -1,6 +1,18 @@
 #include "laplace.h"
 
-double kernel1_gpu_collapse_mem(double (*A)[N], double (*Anew)[N], double err, FILE *fp) {
+double kernel1_gpu_collapse_mem(double (*A)[N], double (*Anew)[N], double err, FILE *fp)
+{
+  int num_threads = 0;
+  int num_teams = 1;
+#pragma omp target teams distribute parallel for collapse(2) map(num_teams, num_threads)
+  for (int i = 1; i < M-1; i++) {
+    for (int j = 1; j < N-1; j++) {
+      if(i == 1 && j == 1) {
+        num_threads = omp_get_num_threads();
+        num_teams = omp_get_num_teams();
+      }
+    }
+  }
   long mem_to = sizeof(double)*M*N;
   long mem_from = sizeof(double)*M*N;
   long mem_alloc = sizeof(double)*M*N;
@@ -22,7 +34,8 @@ double kernel1_gpu_collapse_mem(double (*A)[N], double (*Anew)[N], double err, F
   }
   long end = get_time();
 
-  fprintf(fp, "laplace_kernel1_gpu_collapse_mem,%ld,1,2,%ld,%ld,%ld,%ld,2,%d,%d\n", 
-          (end - start), mem_to, mem_alloc, mem_from, mem_delete, M, N);
+  fprintf(fp, "laplace_kernel1_gpu_collapse_mem,%ld,1,2,%d,%d,%ld,%ld,%ld,%ld,2,%d,%d\n",
+          (end - start), num_teams, num_threads, mem_to, mem_alloc, mem_from,
+          mem_delete, M, N);
   return err;
 }
