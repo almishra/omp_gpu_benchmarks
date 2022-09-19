@@ -1,6 +1,16 @@
 #include "nn.h"
 
-void kernel_nn_cpu(float *z, float *lat, float *lon, FILE *fp) {
+void kernel_nn_cpu(float *z, float *lat, float *lon, FILE *fp)
+{
+  int num_threads = 0;
+  int num_teams = 1;
+#pragma omp parallel for
+  for (int i = 0; i < REC_WINDOW; i++) {
+    if(i == 0) {
+        num_threads = omp_get_num_threads();
+        num_teams = omp_get_num_teams();
+    }
+  }
   long start = get_time();
 #pragma omp parallel for
   for (int i = 0; i < REC_WINDOW; i++) {
@@ -9,5 +19,6 @@ void kernel_nn_cpu(float *z, float *lat, float *lon, FILE *fp) {
   }
   long end = get_time();
 
-  fprintf(fp, "nn_kernel_cpu,%ld,0,1,0,0,0,0,1,%d\n", (end - start), REC_WINDOW);
+  fprintf(fp, "nn_kernel_cpu,%ld,0,1,%d,%d,0,0,0,0,1,%d\n",
+          (end - start), num_teams, num_threads, REC_WINDOW);
 }

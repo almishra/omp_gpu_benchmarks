@@ -1,6 +1,16 @@
 #include "nn.h"
 
-void kernel_nn_gpu_mem(float *z, float *lat, float *lon, FILE *fp) {
+void kernel_nn_gpu_mem(float *z, float *lat, float *lon, FILE *fp)
+{
+  int num_threads = 0;
+  int num_teams = 1;
+#pragma omp target teams distribute parallel for map(num_teams, num_threads)
+  for (int i = 0; i < REC_WINDOW; i++) {
+    if(i == 0) {
+        num_threads = omp_get_num_threads();
+        num_teams = omp_get_num_teams();
+    }
+  }
   long mem_to = 2*sizeof(float)*REC_WINDOW;
   long mem_from = sizeof(float)*REC_WINDOW;
   long mem_alloc = sizeof(float)*REC_WINDOW;
@@ -17,6 +27,7 @@ void kernel_nn_gpu_mem(float *z, float *lat, float *lon, FILE *fp) {
   }
   long end = get_time();
 
-  fprintf(fp, "nn_kernel_gpu_mem,%ld,1,1,%ld,%ld,%ld,%ld,1,%d\n", 
-          (end - start), mem_to, mem_alloc, mem_from, mem_del, REC_WINDOW);
+  fprintf(fp, "nn_kernel_gpu_mem,%ld,1,1,%d,%d,%ld,%ld,%ld,%ld,1,%d\n",
+          (end - start), num_teams, num_threads, mem_to, mem_alloc, mem_from,
+          mem_del, REC_WINDOW);
 }
