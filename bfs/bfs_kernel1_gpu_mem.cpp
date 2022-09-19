@@ -7,6 +7,15 @@ void kernel1_gpu_mem(Node* graph_nodes, bool *graph_mask,
                      bool *updating_graph_mask, bool *graph_visited,
                      int *graph_edges, int *cost, int totalEdges, FILE *fp)
 {
+  int num_threads = 0;
+  int num_teams = 1;
+#pragma omp target teams distribute parallel for map(num_threads, num_teams)
+  for(int tid = 0; tid < N; tid++ ) {
+    if(tid == 0) {
+      num_threads = omp_get_num_threads();
+      num_teams = omp_get_num_teams();
+    }
+  }
   long mem_to = 0;
   long mem_from = 0;
   long mem_alloc = 0;
@@ -36,6 +45,7 @@ void kernel1_gpu_mem(Node* graph_nodes, bool *graph_mask,
   }
   long end = get_time();
 
-  fprintf(fp, "bfs_kernel1_gpu_mem,%ld,1,1,%ld,%ld,%ld,%ld,1,%d\n", (end - start), 
-          mem_to, mem_alloc, mem_from, mem_del, N);
+  fprintf(fp, "bfs_kernel1_gpu_mem,%ld,1,1,%d,%d,%ld,%ld,%ld,%ld,1,%d\n",
+              (end - start), num_teams, num_threads, mem_to, mem_alloc,
+              mem_from, mem_del, N);
 }
