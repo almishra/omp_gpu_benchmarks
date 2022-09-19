@@ -6,6 +6,6 @@ do
   filename="${filename%.*}"
   if [ ! -f output_${filename}.csv ]; then
     ./$i;
-    cat output_${filename}.csv >> ${DATASET}
   fi
+  cat output_${filename}.csv >> ${DATASET}
 done
