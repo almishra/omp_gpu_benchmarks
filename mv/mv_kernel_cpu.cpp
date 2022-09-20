@@ -19,6 +19,6 @@ void mv_kernel_cpu(double (*A)[N2], double *B, double *C, FILE *fp)
   }
 
   long end = get_time();
-  fprintf(fp, "mv_kernel_cpu,%ld,0,1,%d,%d,0,0,0,0,3,%d,%d\n",
+  fprintf(fp, "mv_kernel_cpu,%ld,0,1,%d,%d,0,0,0,0,2,%d,%d\n",
           (end - start), num_teams, num_threads, N1, N2);
 }
