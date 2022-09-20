@@ -11,18 +11,19 @@ void mv_kernel_gpu_mem(double (*A)[N2], double *B, double *C, FILE *fp)
 
   long start = get_time();
 #pragma omp target teams distribute parallel for \
-                   map(to: A[0:N1][0:N2], B[0:N2]) map(from: C[0:N1]) \
-                   map(num_teams, num_threads)
+                                    map(to: A[0:N1][0:N2], B[0:N2]) \
+                                    map(from: C[0:N1]) \
+                                    map(num_teams, num_threads)
   for(int i=0; i<N1; i++) {
-      if(i == 0) {
-        num_threads = omp_get_num_threads();
-        num_teams = omp_get_num_teams();
-      }
-      double sum = 0.0;
-    for(int j=0; j<N2; j++) {
-        sum = sum + A[i][j] * B[j];
+    if(i == 0) {
+      num_threads = omp_get_num_threads();
+      num_teams = omp_get_num_teams();
     }
-      C[i] = sum;
+    double sum = 0.0;
+    for(int j=0; j<N2; j++) {
+      sum = sum + A[i][j] * B[j];
+    }
+    C[i] = sum;
   }
 
   long end = get_time();
