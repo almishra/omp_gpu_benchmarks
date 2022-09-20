@@ -12,7 +12,7 @@ mv: mv.cpp mv_kernel_cpu.cpp mv_kernel_gpu.cpp mv_kernel_gpu_mem.cpp
 		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN1=$${N1} -DN2=$${N2} -c mv_kernel_gpu.cpp -o mv_kernel_gpu_$${N1}_$${N2}_v100.o; \
 		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN1=$${N1} -DN2=$${N2} -c mv_kernel_gpu_mem.cpp -o mv_kernel_gpu_mem_$${N1}_$${N2}_v100.o; \
 		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN1=$${N1} -DN2=$${N2} mv_kernel_*_$${N1}_$${N2}_v100.o  mv_$${N1}_$${N2}_v100.o -o mv_$${N1}_$${N2}_v100.out; \
-		$(RM) mv_kernel_*_$${N1}_$${N2}_v100.o; \
+		$(RM) mv_kernel_*_$${N1}_$${N2}_v100.o mv_$${N1}_$${N2}_v100.o; \
 	fi; \
 	done;done
 
