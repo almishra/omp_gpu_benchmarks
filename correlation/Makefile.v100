@@ -10,7 +10,7 @@ cc: cc.cpp cc_kernel_cpu.cpp cc_kernel_gpu.cpp cc_kernel_gpu_mem.cpp
 	  $(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N1} -c cc_kernel_cpu.cpp -o cc_kernel_cpu_$${N1}_v100.o; \
 		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N1} -c cc_kernel_gpu.cpp -o cc_kernel_gpu_$${N1}_v100.o; \
 		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N1} -c cc_kernel_gpu_mem.cpp -o cc_kernel_gpu_mem_$${N1}_v100.o; \
-		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N1} cc_kernel_*_$${N1}_v100.o cc_$${N1}_v100.o -o cc_$${N1}_v100.out; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N1} -lm cc_kernel_*_$${N1}_v100.o cc_$${N1}_v100.o -o cc_$${N1}_v100.out; \
 		$(RM) cc_kernel_*_$${N1}_v100.o cc_$${N1}_v100.o; \
 	fi; \
 	done;
