@@ -4,25 +4,21 @@ float kernel_gpu_mem(double (*mat)[N], FILE *fp)
 {
   int num_threads = 0;
   int num_teams = 1;
-#pragma omp target teams distribute parallel for map(num_teams, num_threads)
+  float diff = 0;
+  long mem_to = sizeof(double)*N*N + 2*sizeof(int) + sizeof(float);
+  long mem_from = sizeof(double)*N*N + 2*sizeof(int) + sizeof(float);
+  long mem_alloc = 0;
+  long mem_delete = sizeof(double)*N*N;
+
+  long start = get_time();
+#pragma omp target teams distribute parallel for reduction(+:diff) \
+                   map(mat[0:N][0:N], num_teams, num_threads)
   for (int i = 1; i < N-1; i++) {
     for (int j = 1; j < N-1; j++) {
       if(i == 1 && j == 1) {
         num_threads = omp_get_num_threads();
         num_teams = omp_get_num_teams();
       }
-    }
-  }
-  float diff = 0;
-  long mem_to = sizeof(double)*N*N + sizeof(int);
-  long mem_from = sizeof(double)*N*N + sizeof(int);
-  long mem_alloc = 0;
-  long mem_delete = sizeof(double)*N*N;
-  long start = get_time();
-#pragma omp target teams distribute parallel for reduction(+:diff) \
-                   map(mat[0:N][0:N])
-  for (int i = 1; i < N-1; i++) {
-    for (int j = 1; j < N-1; j++) {
       const float temp = mat[i][j];
       mat[i][j] = 0.2f * (
           mat[i][j]

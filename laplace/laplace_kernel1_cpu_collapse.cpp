@@ -4,19 +4,15 @@ double kernel1_cpu_collapse(double (*A)[N], double (*Anew)[N], double err, FILE 
 {
   int num_threads = 0;
   int num_teams = 1;
-#pragma omp parallel for collapse(2)
-  for (int i = 1; i < M-1; i++) {
-    for (int j = 1; j < N-1; j++) {
-      if(i == 1 && j == 1) {
-        num_threads = omp_get_num_threads();
-        num_teams = omp_get_num_teams();
-      }
-    }
-  }
+
   long start = get_time();
 #pragma omp parallel for collapse(2) reduction(max: err)
   for(int i = 1; i < M-1; i++) {
     for(int j = 1; j < N-1; j++) {
+      if(i == 1 && j == 1) {
+        num_threads = omp_get_num_threads();
+        num_teams = omp_get_num_teams();
+      }
       Anew[i][j] = 0.25 * (A[i][j+1] + A[i][j-1] + A[i-1][j] + A[i+1][j]);
 
       double val;

@@ -4,16 +4,14 @@ void kernel_nn_cpu(float *z, float *lat, float *lon, FILE *fp)
 {
   int num_threads = 0;
   int num_teams = 1;
+
+  long start = get_time();
 #pragma omp parallel for
   for (int i = 0; i < REC_WINDOW; i++) {
     if(i == 0) {
         num_threads = omp_get_num_threads();
         num_teams = omp_get_num_teams();
     }
-  }
-  long start = get_time();
-#pragma omp parallel for
-  for (int i = 0; i < REC_WINDOW; i++) {
     z[i] = (lat[i] - TARGET_LAT) * (lat[i] - TARGET_LAT) +
            (lon[i] - TARGET_LON) * (lon[i] - TARGET_LON);
   }

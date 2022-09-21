@@ -8,16 +8,14 @@ bool kernel2_cpu(bool *graph_mask, bool *updating_graph_mask,
 {
   int num_threads = 0;
   int num_teams = 1;
+
+  long start = get_time();
 #pragma omp parallel for
-  for(int tid = 0; tid < N; tid++ ) {
+  for(int tid = 0; tid < N ; tid++) {
     if(tid == 0) {
       num_threads = omp_get_num_threads();
       num_teams = omp_get_num_teams();
     }
-  }
-  long start = get_time();
-#pragma omp parallel for
-  for(int tid = 0; tid < N ; tid++) {
     if (updating_graph_mask[tid] == true) {
       graph_mask[tid] = true;
       graph_visited[tid] = true;

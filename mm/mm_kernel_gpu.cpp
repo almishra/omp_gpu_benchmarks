@@ -7,19 +7,15 @@ void mm_kernel_gpu(double (*A)[N2],
 {
   int num_threads = 0;
   int num_teams = 1;
+
+  long start = get_time();
 #pragma omp target teams distribute parallel for map(num_teams, num_threads)
-  for (int i=0; i<N1; i++) {
-    for (int j=0; j<N3; j++) {
+  for(int i=0; i<N1; i++) {
+    for(int j=0; j<N3; j++) {
       if(i == 0 && j == 0) {
         num_threads = omp_get_num_threads();
         num_teams = omp_get_num_teams();
       }
-    }
-  }
-  long start = get_time();
-#pragma omp target teams distribute parallel for
-  for(int i=0; i<N1; i++) {
-    for(int j=0; j<N3; j++) {
       double sum = 0.0;
       for (int k=0; k<N2; k++)
         sum = sum + A[i][k] * B[k][j];
@@ -27,6 +23,7 @@ void mm_kernel_gpu(double (*A)[N2],
     }
   }
   long end = get_time();
-  fprintf(fp, "mm_kernel_gpu,%ld,1,1,%d,%d,0,0,0,0,3,%d,%d,%d\n",
-          (end - start), num_teams, num_threads, N1, N2, N3);
+  fprintf(fp, "mm_kernel_gpu,%ld,1,1,%d,%d,%lu,0,%lu,0,3,%d,%d,%d\n",
+          (end - start), num_teams, num_threads, 2*sizeof(int), 2*sizeof(int),
+          N1, N2, N3);
 }

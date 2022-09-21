@@ -9,16 +9,13 @@ void kernel1_cpu(Node* graph_nodes, bool *graph_mask, bool *updating_graph_mask,
 {
   int num_threads = 0;
   int num_teams = 1;
-#pragma omp parallel for
+  long start = get_time();
+#pragma omp parallel for 
   for(int tid = 0; tid < N; tid++ ) {
     if(tid == 0) {
       num_threads = omp_get_num_threads();
       num_teams = omp_get_num_teams();
     }
-  }
-  long start = get_time();
-#pragma omp parallel for 
-  for(int tid = 0; tid < N; tid++ ) {
     if (graph_mask[tid] == true) { 
       graph_mask[tid] = false;
       int num = graph_nodes[tid].num_edges + graph_nodes[tid].start;
