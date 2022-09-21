@@ -32,6 +32,12 @@ int main(int argc, char **argv)
   double X[N];
   double Y[N];
 
+  // Initial memory check
+#pragma omp target enter data map(to: X[0:N], Y[0:N])
+  #pragma omp parallel for
+    for (int i=0; i<N; i++);
+#pragma omp target exit data map(delete: X[0:N], Y[0:N])
+
   init(X);
   init(Y);
 
