@@ -14,7 +14,6 @@ void mm_kernel_gpu_mem(double (*A)[N2],
 
   long start = get_time();
 #pragma omp target teams distribute parallel for \
-                   map(alloc: C[0:N1][0:N3]) \
                    map(to: A[0:N1][0:N2], B[0:N2][0:N3]) \
                    map(from: C[0:N1][0:N3]) map(num_teams, num_threads)
   for(int i=0; i<N1; i++) {

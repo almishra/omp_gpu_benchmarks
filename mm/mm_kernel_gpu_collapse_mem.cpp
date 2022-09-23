@@ -30,7 +30,7 @@ void mm_kernel_gpu_collapse_mem(double (*A)[N2],
   }
 
   long end = get_time();
-  fprintf(fp, "mm_kernel_gpu_mem,%ld,1,2,%d,%d,%ld,%ld,%ld,%ld,3,%d,%d,%d\n",
+  fprintf(fp, "mm_kernel_gpu_collapse_mem,%ld,1,2,%d,%d,%ld,%ld,%ld,%ld,3,%d,%d,%d\n",
           (end - start), num_teams, num_threads, mem_to, mem_alloc, mem_from,
           mem_del, N1, N2, N3);
 }
