@@ -1,0 +1,23 @@
+# C++ compiler
+CXX = clang++
+CFLAGS = -Wall -O3 -fopenmp
+OFFLOAD_FLAGS = -fopenmp-targets=nvptx64 -Xopenmp-target -march=sm_80
+
+all: gauss.cpp gauss_kernel_cpu_collapse.cpp gauss_kernel_cpu.cpp gauss_kernel_gpu_collapse.cpp gauss_kernel_gpu_collapse_mem.cpp gauss_kernel_gpu.cpp gauss_kernel_gpu_mem.cpp
+	for (( N=32; N<9500; N+=32 )); do \
+	if [ ! -f gauss_$${N}_a100.out ]; then \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c gauss.cpp -o gauss_$${N}_a100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c gauss_kernel_cpu.cpp -o gauss_kernel_cpu_$${N}_a100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c gauss_kernel_cpu_collapse.cpp -o gauss_kernel_cpu_collapse_$${N}_a100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c gauss_kernel_gpu.cpp -o gauss_kernel_gpu_$${N}_a100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c gauss_kernel_gpu_collapse.cpp -o gauss_kernel_gpu_collapse_$${N}_a100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c gauss_kernel_gpu_mem.cpp -o gauss_kernel_gpu_mem_$${N}_a100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c gauss_kernel_gpu_collapse_mem.cpp -o gauss_kernel_gpu_collapse_mem_$${N}_a100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} gauss_kernel_cpu_$${N}_a100.o gauss_kernel_cpu_collapse_$${N}_a100.o gauss_kernel_gpu_$${N}_a100.o gauss_kernel_gpu_collapse_$${N}_a100.o gauss_kernel_gpu_mem_$${N}_a100.o gauss_kernel_gpu_collapse_mem_$${N}_a100.o gauss_$${N}_a100.o -o gauss_$${N}_a100.out; \
+		$(RM) gauss_kernel_cpu_$${N}_a100.o gauss_kernel_cpu_collapse_$${N}_a100.o gauss_kernel_gpu_$${N}_a100.o gauss_kernel_gpu_collapse_$${N}_a100.o gauss_kernel_gpu_mem_$${N}_a100.o gauss_kernel_gpu_collapse_mem_$${N}_a100.o gauss_$${N}_a100.o; \
+	fi; \
+	done
+
+clean:
+	$(RM) *_a100.o *_a100.out
+
