@@ -1,5 +1,7 @@
 DATASET=dataset_laplace_v100_`date +'%m%d%y_%H%M%S%3N'`.csv
 echo "kernel,runtime,gpu,collapse,num_teams,num_threads,mem_to,mem_alloc,mem_from,mem_delete,num_var,N1,N2" > ${DATASET}
+
+ulimit -s unlimited
 for i in `ls laplace_*.out`
 do
   filename=$(basename -- "$i")
