@@ -1,0 +1,19 @@
+# C++ compiler
+CXX = clang++
+CFLAGS = -Wall -O3 -fopenmp
+OFFLOAD_FLAGS = -fopenmp-targets=nvptx64 -Xopenmp-target -march=sm_37
+
+nn: nn.cpp nn_kernel_cpu.cpp nn_kernel_gpu.cpp nn_kernel_gpu_mem.cpp
+	for (( N1=10000; N1<=50000000; N1+=10000 )); do \
+	if [ ! -f nn_$${N1}_k80.out ]; then \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c nn.cpp -DREC_WINDOW=$${N1} -o nn_$${N1}_k80.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c nn_kernel_cpu.cpp -DREC_WINDOW=$${N1} -o nn_kernel_cpu_$${N1}_k80.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c nn_kernel_gpu.cpp -DREC_WINDOW=$${N1} -o nn_kernel_gpu_$${N1}_k80.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c nn_kernel_gpu_mem.cpp -DREC_WINDOW=$${N1} -o nn_kernel_gpu_mem_$${N1}_k80.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -lm nn_kernel_cpu_$${N1}_k80.o nn_kernel_gpu_$${N1}_k80.o nn_kernel_gpu_mem_$${N1}_k80.o nn_$${N1}_k80.o -o nn_$${N1}_k80.out; \
+		$(RM) nn_kernel_cpu_$${N1}_k80.o nn_kernel_gpu_$${N1}_k80.o nn_kernel_gpu_mem_$${N1}_k80.o nn_$${N1}_k80.o; \
+	fi; \
+	done
+
+clean:
+	$(RM) *_k80.out *_k80.o
