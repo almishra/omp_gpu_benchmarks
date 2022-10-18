@@ -1,0 +1,19 @@
+# C++ compiler
+CXX = clang++
+CFLAGS = -Wall -O3 -fopenmp
+OFFLOAD_FLAGS = -fopenmp-targets=nvptx64 -Xopenmp-target -march=sm_75
+
+cc: cc.cpp cc_kernel_cpu.cpp cc_kernel_gpu.cpp cc_kernel_gpu_mem.cpp
+	for (( N1=1000; N1<=10000000; N1+=1000 )); do \
+	if [ ! -f cc_$${N1}_rtx.out ]; then \
+  	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N1} -c cc.cpp -o cc_$${N1}_rtx.o; \
+	  $(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N1} -c cc_kernel_cpu.cpp -o cc_kernel_cpu_$${N1}_rtx.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N1} -c cc_kernel_gpu.cpp -o cc_kernel_gpu_$${N1}_rtx.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N1} -c cc_kernel_gpu_mem.cpp -o cc_kernel_gpu_mem_$${N1}_rtx.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N1} -lm cc_kernel_*_$${N1}_rtx.o cc_$${N1}_rtx.o -o cc_$${N1}_rtx.out; \
+		$(RM) cc_kernel_*_$${N1}_rtx.o cc_$${N1}_rtx.o; \
+	fi; \
+	done;
+
+clean:
+	$(RM) *_rtx.o *_rtx.out
