@@ -1,0 +1,23 @@
+# C++ compiler
+CXX = clang++
+CFLAGS = -Wall -O3 -fopenmp
+OFFLOAD_FLAGS = -fopenmp-targets=nvptx64 -Xopenmp-target -march=sm_80
+
+transpose: transpose.cpp transpose_kernel_cpu_collapse.cpp transpose_kernel_cpu.cpp transpose_kernel_gpu_collapse.cpp transpose_kernel_gpu_collapse_mem.cpp transpose_kernel_gpu.cpp transpose_kernel_gpu_mem.cpp
+	for (( N1=100; N1<=10000; N1+=100 )); do \
+	for (( N2=100; N2<=10000; N2+=100 )); do \
+	if [ ! -f transpose_$${N1}_$${N2}_a100.out ]; then \
+  	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN1=$${N1} -DN2=$${N2} -c transpose.cpp -o transpose_$${N1}_$${N2}_a100.o; \
+	  $(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN1=$${N1} -DN2=$${N2} -c transpose_kernel_cpu.cpp -o transpose_kernel_cpu_$${N1}_$${N2}_a100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN1=$${N1} -DN2=$${N2} -c transpose_kernel_cpu_collapse.cpp -o transpose_kernel_cpu_collapse_$${N1}_$${N2}_a100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN1=$${N1} -DN2=$${N2} -c transpose_kernel_gpu.cpp -o transpose_kernel_gpu_$${N1}_$${N2}_a100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN1=$${N1} -DN2=$${N2} -c transpose_kernel_gpu_collapse.cpp -o transpose_kernel_gpu_collapse_$${N1}_$${N2}_a100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN1=$${N1} -DN2=$${N2} -c transpose_kernel_gpu_mem.cpp -o transpose_kernel_gpu_mem_$${N1}_$${N2}_a100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN1=$${N1} -DN2=$${N2} -c transpose_kernel_gpu_collapse_mem.cpp -o transpose_kernel_gpu_collapse_mem_$${N1}_$${N2}_a100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN1=$${N1} -DN2=$${N2} transpose_kernel_*_$${N1}_$${N2}_a100.o transpose_$${N1}_$${N2}_a100.o -o transpose_$${N1}_$${N2}_a100.out; \
+		$(RM) transpose_kernel_*_$${N1}_$${N2}_a100.o transpose_$${N1}_$${N2}_a100.o; \
+	fi; \
+	done;done
+
+clean:
+	$(RM) *_a100.o *_a100.out
