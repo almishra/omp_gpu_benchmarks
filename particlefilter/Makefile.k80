@@ -1,0 +1,36 @@
+# C++ compiler
+CXX = clang++
+CFLAGS = -Wall -O3 -fopenmp
+OFFLOAD_FLAGS = -fopenmp-targets=nvptx64 -Xopenmp-target -march=sm_37
+
+particlefilter:
+	for (( N1=100000; N1<=10000000; N1+=10000 )); do \
+	if [ ! -f particlefilter_$${N1}_k80.out ]; then \
+  	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c -DN=$${N1} particlefilter.cpp -o particlefilter_$${N1}_k80.o; \
+  	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c -DN=$${N1} particlefilter_kernel1_cpu.cpp -o particlefilter_kernel1_cpu_$${N1}_k80.o; \
+  	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c -DN=$${N1} particlefilter_kernel2_cpu.cpp -o particlefilter_kernel2_cpu_$${N1}_k80.o; \
+  	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c -DN=$${N1} particlefilter_kernel3_cpu.cpp -o particlefilter_kernel3_cpu_$${N1}_k80.o; \
+  	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c -DN=$${N1} particlefilter_kernel4_cpu.cpp -o particlefilter_kernel4_cpu_$${N1}_k80.o; \
+  	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c -DN=$${N1} particlefilter_kernel5_cpu.cpp -o particlefilter_kernel5_cpu_$${N1}_k80.o; \
+  	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c -DN=$${N1} particlefilter_kernel6_cpu.cpp -o particlefilter_kernel6_cpu_$${N1}_k80.o; \
+  	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c -DN=$${N1} particlefilter_kernel7_cpu.cpp -o particlefilter_kernel7_cpu_$${N1}_k80.o; \
+  	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c -DN=$${N1} particlefilter_kernel1_gpu.cpp -o particlefilter_kernel1_gpu_$${N1}_k80.o; \
+  	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c -DN=$${N1} particlefilter_kernel2_gpu.cpp -o particlefilter_kernel2_gpu_$${N1}_k80.o; \
+  	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c -DN=$${N1} particlefilter_kernel3_gpu.cpp -o particlefilter_kernel3_gpu_$${N1}_k80.o; \
+  	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c -DN=$${N1} particlefilter_kernel4_gpu.cpp -o particlefilter_kernel4_gpu_$${N1}_k80.o; \
+  	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c -DN=$${N1} particlefilter_kernel5_gpu.cpp -o particlefilter_kernel5_gpu_$${N1}_k80.o; \
+  	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c -DN=$${N1} particlefilter_kernel6_gpu.cpp -o particlefilter_kernel6_gpu_$${N1}_k80.o; \
+  	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c -DN=$${N1} particlefilter_kernel7_gpu.cpp -o particlefilter_kernel7_gpu_$${N1}_k80.o; \
+  	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c -DN=$${N1} particlefilter_kernel1_gpu_mem.cpp -o particlefilter_kernel1_gpu_mem_$${N1}_k80.o; \
+  	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c -DN=$${N1} particlefilter_kernel2_gpu_mem.cpp -o particlefilter_kernel2_gpu_mem_$${N1}_k80.o; \
+  	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c -DN=$${N1} particlefilter_kernel3_gpu_mem.cpp -o particlefilter_kernel3_gpu_mem_$${N1}_k80.o; \
+  	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c -DN=$${N1} particlefilter_kernel4_gpu_mem.cpp -o particlefilter_kernel4_gpu_mem_$${N1}_k80.o; \
+  	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c -DN=$${N1} particlefilter_kernel5_gpu_mem.cpp -o particlefilter_kernel5_gpu_mem_$${N1}_k80.o; \
+  	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c -DN=$${N1} particlefilter_kernel6_gpu_mem.cpp -o particlefilter_kernel6_gpu_mem_$${N1}_k80.o; \
+  	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -c -DN=$${N1} particlefilter_kernel7_gpu_mem.cpp -o particlefilter_kernel7_gpu_mem_$${N1}_k80.o; \
+  	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -lm -DN=$${N1} particlefilter_kernel?_cpu_$${N1}_k80.o particlefilter_kernel?_gpu_$${N1}_k80.o particlefilter_kernel?_gpu_mem_$${N1}_k80.o particlefilter_$${N1}_k80.o -o particlefilter_$${N1}_k80.out; \
+		$(RM) particlefilter_kernel?_cpu_$${N1}_k80.o particlefilter_kernel?_gpu_$${N1}_k80.o particlefilter_kernel?_gpu_mem_$${N1}_k80.o particlefilter_$${N1}_k80.o; \
+	fi; done
+
+clean:
+	$(RM) *_k80.o *_k80.out
