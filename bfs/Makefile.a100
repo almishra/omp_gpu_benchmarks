@@ -1,0 +1,22 @@
+# C++ compiler
+CXX = clang++
+CFLAGS = -Wall -O3 -fopenmp
+OFFLOAD_FLAGS = -fopenmp-targets=nvptx64 -Xopenmp-target -march=sm_80
+
+bfs: bfs.cpp bfs_kernel1_cpu.cpp bfs_kernel1_gpu.cpp bfs_kernel1_gpu_mem.cpp bfs_kernel2_cpu.cpp bfs_kernel2_gpu.cpp bfs_kernel2_gpu_mem.cpp
+	for (( N=100000; N<=102400000; N+=10000 )); do \
+	if [ ! -f bfs_$${N}_a100.out ]; then \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c bfs.cpp -o bfs_$${N}_a100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c bfs_kernel1_cpu.cpp -o bfs_kernel1_cpu_$${N}_a100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c bfs_kernel2_cpu.cpp -o bfs_kernel2_cpu_$${N}_a100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c bfs_kernel1_gpu.cpp -o bfs_kernel1_gpu_$${N}_a100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c bfs_kernel2_gpu.cpp -o bfs_kernel2_gpu_$${N}_a100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c bfs_kernel1_gpu_mem.cpp -o bfs_kernel1_gpu_mem_$${N}_a100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} -c bfs_kernel2_gpu_mem.cpp -o bfs_kernel2_gpu_mem_$${N}_a100.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N} bfs_kernel1_cpu_$${N}_a100.o bfs_kernel2_cpu_$${N}_a100.o bfs_kernel1_gpu_$${N}_a100.o bfs_kernel2_gpu_$${N}_a100.o bfs_kernel1_gpu_mem_$${N}_a100.o bfs_kernel2_gpu_mem_$${N}_a100.o bfs_$${N}_a100.o -o bfs_$${N}_a100.out; \
+		$(RM) bfs_kernel1_cpu_$${N}_a100.o bfs_kernel2_cpu_$${N}_a100.o bfs_kernel1_gpu_$${N}_a100.o bfs_kernel2_gpu_$${N}_a100.o bfs_kernel1_gpu_mem_$${N}_a100.o bfs_kernel2_gpu_mem_$${N}_a100.o bfs_$${N}_a100.o; \
+	fi; \
+	done
+
+clean:
+	$(RM) *.o *.out
