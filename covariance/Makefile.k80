@@ -1,0 +1,22 @@
+# C++ compiler
+CXX = clang++
+CFLAGS = -Wall -O3 -fopenmp
+OFFLOAD_FLAGS = -fopenmp-targets=nvptx64 -Xopenmp-target -march=sm_37
+
+covariance: covariance.cpp covariance_kernel1_cpu.cpp covariance_kernel1_gpu.cpp covariance_kernel1_gpu_mem.cpp covariance_kernel2_cpu.cpp covariance_kernel2_gpu.cpp covariance_kernel2_gpu_mem.cpp
+	for (( N1=1000000; N1<=10000000; N1+=1000 )); do \
+	if [ ! -f covariance_$${N1}_k80.out ]; then \
+  	$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N1} -c covariance.cpp -o covariance_$${N1}_k80.o; \
+	  $(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N1} -c covariance_kernel1_cpu.cpp -o covariance_kernel1_cpu_$${N1}_k80.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N1} -c covariance_kernel1_gpu.cpp -o covariance_kernel1_gpu_$${N1}_k80.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N1} -c covariance_kernel1_gpu_mem.cpp -o covariance_kernel1_gpu_mem_$${N1}_k80.o; \
+	  $(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N1} -c covariance_kernel2_cpu.cpp -o covariance_kernel2_cpu_$${N1}_k80.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N1} -c covariance_kernel2_gpu.cpp -o covariance_kernel2_gpu_$${N1}_k80.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N1} -c covariance_kernel2_gpu_mem.cpp -o covariance_kernel2_gpu_mem_$${N1}_k80.o; \
+		$(CXX) $(CFLAGS) $(OFFLOAD_FLAGS) -DN=$${N1} covariance_kernel?_*_$${N1}_k80.o covariance_$${N1}_k80.o -o covariance_$${N1}_k80.out; \
+		$(RM) covariance_kernel?_*_$${N1}_k80.o covariance_$${N1}_k80.o; \
+	fi; \
+	done;
+
+clean:
+	$(RM) *_k80.o *_k80.out
